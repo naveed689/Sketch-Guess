@@ -1,0 +1,354 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+.wr-page {
+  min-height: 100vh;
+  background: #0d0d1a;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: 'Press Start 2P', monospace;
+  padding: 40px 24px;
+  gap: 32px;
+  position: relative;
+  overflow: hidden;
+}
+
+.wr-page .scanlines {
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 3px,
+    rgba(0, 0, 0, 0.18) 3px,
+    rgba(0, 0, 0, 0.18) 4px
+  );
+  pointer-events: none;
+  z-index: 100;
+}
+
+.wr-page .wr-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  max-width: 780px;
+}
+
+.wr-page .wr-title-tag {
+  font-size: 10px;
+  color: #f5c518;
+  letter-spacing: 4px;
+  opacity: 0.8;
+}
+
+.wr-page .wr-room-code {
+  font-size: 11px;
+  color: #555;
+  letter-spacing: 3px;
+}
+
+.wr-page .code-value {
+  color: #f5c518;
+}
+
+.wr-page .pixel-divider {
+  width: 80px;
+  height: 4px;
+  background: repeating-linear-gradient(
+    to right,
+    #f5c518 0px, #f5c518 8px,
+    transparent 8px, transparent 12px
+  );
+}
+
+.wr-page .wr-body {
+  display: flex;
+  gap: 24px;
+  width: 100%;
+  max-width: 780px;
+  align-items: flex-start;
+}
+
+.wr-page .wr-panel {
+  flex: 1;
+  background: #10101f;
+  border: 3px solid #f5c518;
+  box-shadow: 6px 6px 0px #a88510;
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-height: 280px;
+}
+
+.wr-page .panel-title {
+  font-size: 9px;
+  color: #f5c518;
+  letter-spacing: 3px;
+  border-bottom: 2px solid #2a2a3a;
+  padding-bottom: 12px;
+}
+
+.wr-page .players-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.wr-page .player-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: #0d0d1a;
+  border: 2px solid #1e1e30;
+  position: relative;
+  transition: border-color 0.15s;
+}
+
+.wr-page .player-row:hover {
+  border-color: #f5c518;
+}
+
+.wr-page .player-crown {
+  font-size: 12px;
+  color: #f5c518;
+  min-width: 16px;
+}
+
+.wr-page .player-name-wr {
+  font-size: 9px;
+  color: #fff;
+  flex: 1;
+  letter-spacing: 1px;
+}
+
+.wr-page .host-badge {
+  font-size: 7px;
+  color: #0d0d1a;
+  background: #f5c518;
+  padding: 3px 6px;
+  letter-spacing: 1px;
+}
+
+.wr-page .kick-btn {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  background: transparent;
+  color: #ff4d4d;
+  border: 2px solid #ff4d4d;
+  padding: 4px 7px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.wr-page .kick-btn:hover {
+  background: #ff4d4d;
+  color: #0d0d1a;
+}
+
+.wr-page .settings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.wr-page .setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: #0d0d1a;
+  border: 2px solid #1e1e30;
+}
+
+.wr-page .setting-label {
+  font-size: 8px;
+  color: #888;
+  letter-spacing: 2px;
+}
+
+.wr-page .setting-value {
+  font-size: 9px;
+  color: #f5c518;
+}
+
+.wr-page .pixel-select {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  background: #0d0d1a;
+  color: #f5c518;
+  border: 2px solid #f5c518;
+  padding: 6px 10px;
+  cursor: pointer;
+  outline: none;
+}
+
+.wr-page .pixel-select:focus {
+  border-color: #fff;
+}
+
+.wr-page .wr-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  max-width: 780px;
+}
+
+.wr-page .error-msg {
+  font-size: 8px;
+  color: #ff4d4d;
+  letter-spacing: 1px;
+}
+
+.wr-page .pixel-btn {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 11px;
+  letter-spacing: 2px;
+  cursor: pointer;
+  border: none;
+  padding: 16px 40px;
+  transition: transform 0.08s, box-shadow 0.08s;
+  user-select: none;
+}
+
+.wr-page .btn-start {
+  background: #f5c518;
+  color: #0d0d1a;
+  box-shadow: 5px 5px 0px #a88510;
+}
+
+.wr-page .btn-start:active {
+  transform: translate(3px, 3px);
+  box-shadow: 2px 2px 0px #a88510;
+}
+
+.wr-page .waiting-text {
+  font-size: 9px;
+  color: #555;
+  letter-spacing: 2px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.wr-page .blink-dot {
+  color: #f5c518;
+  animation: wr-blink 1s step-end infinite;
+}
+
+@keyframes wr-blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+.wr-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.88);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+}
+
+.wr-modal-box {
+  background: #0d0d1a;
+  border: 4px solid #f5c518;
+  padding: 36px 32px;
+  width: 340px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  box-shadow: 8px 8px 0px #a88510;
+  font-family: 'Press Start 2P', monospace;
+}
+
+.wr-modal-box .modal-title {
+  font-size: 12px;
+  color: #f5c518;
+  text-align: center;
+  letter-spacing: 2px;
+}
+
+.wr-modal-box .kick-name {
+  font-size: 10px;
+  color: #fff;
+  text-align: center;
+  letter-spacing: 1px;
+}
+
+.wr-modal-box .modal-btns {
+  display: flex;
+  gap: 12px;
+}
+
+.wr-modal-box .btn-cancel {
+  flex: 1;
+  padding: 12px 8px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  letter-spacing: 1px;
+  cursor: pointer;
+  background: transparent;
+  color: #666;
+  border: 2px solid #333;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.wr-modal-box .btn-cancel:hover {
+  border-color: #666;
+  color: #999;
+}
+
+.wr-modal-box .btn-kick-confirm {
+  flex: 1;
+  padding: 12px 8px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  letter-spacing: 1px;
+  cursor: pointer;
+  background: #ff4d4d;
+  color: #fff;
+  border: none;
+  box-shadow: 3px 3px 0px #991f1f;
+  transition: transform 0.08s, box-shadow 0.08s;
+}
+
+.wr-modal-box .btn-kick-confirm:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0px #991f1f;
+}
+
+/* ── Leave button ── */
+.wr-leave-btn {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  background: transparent;
+  color: #ff4d4d;
+  border: 2px solid #ff4d4d;
+  padding: 10px 20px;
+  cursor: pointer;
+  letter-spacing: 1px;
+  transition: background 0.15s, color 0.15s;
+}
+
+.wr-leave-btn:hover {
+  background: #ff4d4d;
+  color: #0d0d1a;
+}
+
+/* ── WaitingRoom modal overlay (reused for leave) ── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.88);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+}

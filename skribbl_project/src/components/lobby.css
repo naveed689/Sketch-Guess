@@ -1,0 +1,321 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+.lobby-page {
+  min-height: 100vh;
+  background: #0d0d1a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Press Start 2P', monospace;
+  overflow: hidden;
+  position: relative;
+}
+
+.lobby-page .scanlines {
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 3px,
+    rgba(0, 0, 0, 0.18) 3px,
+    rgba(0, 0, 0, 0.18) 4px
+  );
+  pointer-events: none;
+  z-index: 100;
+}
+
+.lobby-page .lobby-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 36px;
+  padding: 60px 40px;
+  width: 460px;
+}
+
+.lobby-page .title-wrap {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.lobby-page .title-tag {
+  font-size: 9px;
+  color: #f5c518;
+  letter-spacing: 4px;
+  opacity: 0.7;
+}
+
+.lobby-page .title-main {
+  font-size: 38px;
+  color: #ffffff;
+  line-height: 1.35;
+  text-shadow:
+    4px 4px 0px #f5c518,
+    -1px -1px 0px #a88510;
+}
+
+.lobby-page .title-accent {
+  color: #f5c518;
+}
+
+.lobby-page .cursor-blink {
+  display: inline-block;
+  width: 14px;
+  height: 20px;
+  background: #f5c518;
+  vertical-align: middle;
+  margin-left: 8px;
+  animation: lobby-blink 1s step-end infinite;
+}
+
+@keyframes lobby-blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+.lobby-page .pixel-divider {
+  width: 80px;
+  height: 4px;
+  background: repeating-linear-gradient(
+    to right,
+    #f5c518 0px, #f5c518 8px,
+    transparent 8px, transparent 12px
+  );
+}
+
+.lobby-page .title-sub {
+  font-size: 8px;
+  color: #555;
+  letter-spacing: 3px;
+}
+
+.lobby-page .input-group {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.lobby-page .input-label {
+  font-size: 9px;
+  color: #f5c518;
+  letter-spacing: 2px;
+}
+
+.lobby-page .pixel-input {
+  width: 100%;
+  padding: 14px 16px;
+  background: #0d0d1a;
+  border: 3px solid #f5c518;
+  color: #fff;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 11px;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.lobby-page .pixel-input:focus {
+  border-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(245, 197, 24, 0.2);
+}
+
+.lobby-page .pixel-input::placeholder {
+  color: #3a3a3a;
+  font-size: 10px;
+}
+
+.lobby-page .pixel-input.input-error {
+  border-color: #ff4d4d;
+}
+
+.lobby-page .error-msg {
+  font-size: 8px;
+  color: #ff4d4d;
+  letter-spacing: 1px;
+  line-height: 1.6;
+}
+
+.lobby-page .btn-row {
+  display: flex;
+  gap: 16px;
+  width: 100%;
+}
+
+.lobby-page .pixel-btn {
+  flex: 1;
+  padding: 14px 8px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  letter-spacing: 1px;
+  cursor: pointer;
+  border: none;
+  transition: transform 0.08s, box-shadow 0.08s;
+  user-select: none;
+}
+
+.lobby-page .pixel-btn:active {
+  transform: translate(3px, 3px);
+}
+
+.lobby-page .btn-join {
+  background: #0d0d1a;
+  color: #f5c518;
+  border: 3px solid #f5c518;
+  box-shadow: 4px 4px 0px #a88510;
+}
+
+.lobby-page .btn-join:active {
+  box-shadow: 1px 1px 0px #a88510;
+}
+
+.lobby-page .btn-create {
+  background: #f5c518;
+  color: #0d0d1a;
+  box-shadow: 4px 4px 0px #a88510;
+}
+
+.lobby-page .btn-create:active {
+  box-shadow: 1px 1px 0px #a88510;
+}
+
+.lobby-page .deco-row {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.lobby-page .deco-line {
+  width: 120px;
+  height: 3px;
+  background: repeating-linear-gradient(
+    to right,
+    #2a2a3a 0px, #2a2a3a 6px,
+    transparent 6px, transparent 10px
+  );
+}
+
+.lobby-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.88);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+}
+
+.lobby-modal-box {
+  background: #0d0d1a;
+  border: 4px solid #f5c518;
+  padding: 36px 32px;
+  width: 380px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  box-shadow: 8px 8px 0px #a88510;
+  font-family: 'Press Start 2P', monospace;
+}
+
+.lobby-modal-box .modal-title {
+  font-size: 12px;
+  color: #f5c518;
+  text-align: center;
+  letter-spacing: 2px;
+}
+
+.lobby-modal-box .input-group {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.lobby-modal-box .input-label {
+  font-size: 9px;
+  color: #f5c518;
+  letter-spacing: 2px;
+}
+
+.lobby-modal-box .pixel-input {
+  width: 100%;
+  padding: 14px 16px;
+  background: #0d0d1a;
+  border: 3px solid #f5c518;
+  color: #fff;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 11px;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.lobby-modal-box .pixel-input:focus {
+  border-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(245, 197, 24, 0.2);
+}
+
+.lobby-modal-box .pixel-input::placeholder {
+  color: #3a3a3a;
+  font-size: 10px;
+}
+
+.lobby-modal-box .pixel-input.input-error {
+  border-color: #ff4d4d;
+}
+
+.lobby-modal-box .error-msg {
+  font-size: 8px;
+  color: #ff4d4d;
+  letter-spacing: 1px;
+}
+
+.lobby-modal-box .modal-btns {
+  display: flex;
+  gap: 12px;
+}
+
+.lobby-modal-box .btn-cancel {
+  flex: 1;
+  padding: 12px 8px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  letter-spacing: 1px;
+  cursor: pointer;
+  background: transparent;
+  color: #666;
+  border: 2px solid #333;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.lobby-modal-box .btn-cancel:hover {
+  border-color: #666;
+  color: #999;
+}
+
+.lobby-modal-box .btn-confirm {
+  flex: 1;
+  padding: 12px 8px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  letter-spacing: 1px;
+  cursor: pointer;
+  background: #f5c518;
+  color: #0d0d1a;
+  border: none;
+  box-shadow: 3px 3px 0px #a88510;
+  transition: transform 0.08s, box-shadow 0.08s;
+}
+
+.lobby-modal-box .btn-confirm:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0px #a88510;
+}
