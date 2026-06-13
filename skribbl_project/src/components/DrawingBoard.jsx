@@ -221,10 +221,17 @@ const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }) => {
         window.addEventListener("mousemove", handleMouseMove);
         window.addEventListener("mouseup", handleMouseUp);
         canvas.addEventListener("mouseleave", handleMouseUp);
+
+        canvas.addEventListener("touchstart", handleTouchStart, { passive: false });
+        canvas.addEventListener("touchmove", handleTouchMove, { passive: false });
+        canvas.addEventListener("touchend", handleTouchEnd, { passive: false });
         return () => {
             window.removeEventListener("mousemove", handleMouseMove);
             window.removeEventListener("mouseup", handleMouseUp);
             canvas.removeEventListener("mouseleave", handleMouseUp);
+            canvas.removeEventListener("touchstart", handleTouchStart);
+            canvas.removeEventListener("touchmove", handleTouchMove);
+            canvas.removeEventListener("touchend", handleTouchEnd);
         };
     }, []);
 
@@ -273,6 +280,23 @@ const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }) => {
     const updateHistoryState = () => {
         setCanUndo(strokesRef.current.length > 0);
         setCanRedo(redoRef.current.length > 0);
+    };
+
+    const handleTouchStart = (e) => {
+        e.preventDefault();
+        const touch = e.touches[0];
+        handleMouseDown({ clientX: touch.clientX, clientY: touch.clientY });
+    };
+
+    const handleTouchMove = (e) => {
+        e.preventDefault();
+        const touch = e.touches[0];
+        handleMouseMove({ clientX: touch.clientX, clientY: touch.clientY });
+    };
+
+    const handleTouchEnd = (e) => {
+        e.preventDefault();
+        handleMouseUp();
     };
 
     const handleMouseDown = (e) => {
