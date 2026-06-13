@@ -56,6 +56,8 @@ const Chat = ({ socket, roomData, playerName, wordHint, gamePhase, hasGuessed, s
         }
     }, [chatMessages]);
 
+    const MAX_LENGTH = 100;
+
     const sendMessage = () => {
         if (!message) return;
         if (!hasGuessed
@@ -112,13 +114,25 @@ const Chat = ({ socket, roomData, playerName, wordHint, gamePhase, hasGuessed, s
                     className="chat-input"
                     type="text"
                     value={message}
-                    onChange={(e) => setMessage(e.target.value)}
+                    onChange={(e) => setMessage(e.target.value.slice(0, MAX_LENGTH))}
                     onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
                     placeholder={hasGuessed ? "chat..." : "guess or chat..."}
                     disabled={gamePhase !== 'drawing' && gamePhase !== 'roundEnd'}
+                    maxLength={MAX_LENGTH}
                 />
                 <button className="chat-send-btn" onClick={sendMessage}>▶</button>
             </div>
+            {message.length > 0 && (
+                <div className="chat-char-bar">
+                    <div
+                        className="chat-char-fill"
+                        style={{
+                            width: `${(message.length / MAX_LENGTH) * 100}%`,
+                            background: message.length > 80 ? '#ff4d4d' : '#f5c518'
+                        }}
+                    />
+                </div>
+            )}
         </>
     );
 };
