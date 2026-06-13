@@ -3,11 +3,12 @@ const { createServer } = require('http');
 const { Server } = require('socket.io');
 const { generateRoomCode, levenshtein } = require('./utils/roomUtils.js');
 const { getRandomWords } = require('./utils/word.js');
+require('dotenv').config();
 
 const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
-    cors: { origin: "http://localhost:5173" }
+    cors: { origin: process.env.CLIENT_URL || "http://localhost:5173" }
 });
 
 // In-memory storage for rooms and players (for simplicity, no database)
@@ -548,4 +549,6 @@ io.on('connection', (socket) => {
     });
 });
 
-httpServer.listen(3001, () => console.log('server on port 3001'));
+httpServer.listen(process.env.PORT || 3001, () => {
+    console.log('Server running');
+});

@@ -5,7 +5,7 @@ import Lobby from './components/Lobby';
 import WaitingRoom from './components/WaitingRoom';
 import DrawingBoard from './components/DrawingBoard';
 
-const socket = io('http://localhost:3001');
+const socket = io(import.meta.env.VITE_SERVER_URL);
 
 const App = () => {
     const [screen, setScreen] = useState("lobby");
