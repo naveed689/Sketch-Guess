@@ -218,13 +218,61 @@ const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }) => {
         context.lineCap = "round";
         context.strokeStyle = color;
 
+        const getTouchPos = (touch) => {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            return {
+                x: Math.floor((touch.clientX - rect.left) * scaleX),
+                y: Math.floor((touch.clientY - rect.top) * scaleY)
+            };
+        };
+
+        const handleTouchStart = (e) => {
+            e.preventDefault();
+            if (socket.id !== roomDataRef.current?.currentDrawer) return;
+            const { x, y } = getTouchPos(e.touches[0]);
+            const ctx = contextRef.current;
+            currentStrokeRef.current = { type: "stroke", tool: toolRef.current, color: colorRef.current, size: brushSizeRef.current, points: [] };
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            currentStrokeRef.current.points.push({ x, y });
+            ctx.lineTo(x + 0.1, y + 0.1);
+            ctx.stroke();
+            socket.emit('drawStart', { x, y, color: colorRef.current, size: toolRef.current === 'eraser' ? 20 : brushSizeRef.current, tool: toolRef.current, roomCode: roomDataRef.current.code });
+            isDrawingRef.current = true;
+        };
+
+        const handleTouchMove = (e) => {
+            e.preventDefault();
+            if (!isDrawingRef.current) return;
+            const { x, y } = getTouchPos(e.touches[0]);
+            const ctx = contextRef.current;
+            ctx.lineTo(x, y);
+            ctx.stroke();
+            socket.emit('draw', { x, y, color: colorRef.current, size: brushSizeRef.current, tool: toolRef.current, roomCode: roomDataRef.current.code });
+            currentStrokeRef.current?.points.push({ x, y });
+        };
+
+        const handleTouchEnd = (e) => {
+            e.preventDefault();
+            if (!isDrawingRef.current) return;
+            contextRef.current.closePath();
+            socket.emit('drawEnd', { roomCode: roomDataRef.current.code });
+            strokesRef.current.push(currentStrokeRef.current);
+            redoRef.current = [];
+            currentStrokeRef.current = null;
+            isDrawingRef.current = false;
+            updateHistoryState();
+        };
+
         window.addEventListener("mousemove", handleMouseMove);
         window.addEventListener("mouseup", handleMouseUp);
         canvas.addEventListener("mouseleave", handleMouseUp);
-
         canvas.addEventListener("touchstart", handleTouchStart, { passive: false });
         canvas.addEventListener("touchmove", handleTouchMove, { passive: false });
         canvas.addEventListener("touchend", handleTouchEnd, { passive: false });
+
         return () => {
             window.removeEventListener("mousemove", handleMouseMove);
             window.removeEventListener("mouseup", handleMouseUp);
@@ -280,23 +328,6 @@ const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }) => {
     const updateHistoryState = () => {
         setCanUndo(strokesRef.current.length > 0);
         setCanRedo(redoRef.current.length > 0);
-    };
-
-    const handleTouchStart = (e) => {
-        e.preventDefault();
-        const touch = e.touches[0];
-        handleMouseDown({ clientX: touch.clientX, clientY: touch.clientY });
-    };
-
-    const handleTouchMove = (e) => {
-        e.preventDefault();
-        const touch = e.touches[0];
-        handleMouseMove({ clientX: touch.clientX, clientY: touch.clientY });
-    };
-
-    const handleTouchEnd = (e) => {
-        e.preventDefault();
-        handleMouseUp();
     };
 
     const handleMouseDown = (e) => {
