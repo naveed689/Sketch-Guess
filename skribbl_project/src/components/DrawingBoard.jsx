@@ -200,10 +200,25 @@ const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }) => {
             setScreen('lobby');
         });
 
+        socket.on('backToLobby', ({ players }) => {
+            setRoomData(prev => ({
+                ...prev,
+                players,
+                status: 'waiting',
+                gamePhase: 'waiting',
+                currentDrawer: null,
+                currentWord: null,
+                wordHint: '',
+                wordChoices: [],
+                round: 1,
+            }));
+            setScreen('waiting');
+        });
+
         return () => {
             ['drawStart','draw','drawEnd','fill','clear','undo','redo','chooseWord','yourWord',
              'drawingPhaseStarted','timerTick','roundEnded','nextRoundStarted','nextTurn',
-             'gameOver','correctGuesser','playersUpdated','reaction','kicked'].forEach(e => socket.off(e));
+             'gameOver','correctGuesser','playersUpdated','reaction','kicked', 'backToLobby'].forEach(e => socket.off(e));
         };
     }, []);
 
