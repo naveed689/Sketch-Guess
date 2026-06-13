@@ -352,3 +352,40 @@
   justify-content: center;
   z-index: 200;
 }
+
+/* ── Mobile fixes ── */
+@media (max-width: 600px) {
+  .wr-page {
+    padding: 24px 16px;
+    align-items: center;
+  }
+
+  .wr-header {
+    align-items: center;
+  }
+
+  .wr-body {
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+  }
+
+  .wr-panel {
+    width: 100%;
+    min-height: unset;
+  }
+
+  .wr-footer {
+    align-items: center;
+  }
+
+  .pixel-btn {
+    width: 100%;
+    text-align: center;
+  }
+
+  .wr-leave-btn {
+    width: 100%;
+    text-align: center;
+  }
+}

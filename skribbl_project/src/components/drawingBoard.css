@@ -812,17 +812,71 @@
   .chat-panel { display: none; }
   .overlay-toggle-btn.chat-btn { display: inline-flex; }
 
+  /* Topbar: two rows on mobile */
   .game-topbar {
+    flex-wrap: wrap;
     padding: 8px 10px;
+    gap: 6px;
   }
 
+  .topbar-left {
+    flex: 0 0 auto;
+    gap: 6px;
+  }
+
+  .round-tag {
+    flex: 0 0 auto;
+    min-width: unset;
+    font-size: 7px;
+  }
+
+  /* hint bar drops to its own full-width row */
   .hint-bar {
+    order: 10;
+    flex: 0 0 100%;
     font-size: 10px;
-    letter-spacing: 4px;
+    letter-spacing: 3px;
+    text-align: center;
+    padding: 4px 0;
+    border-top: 1px solid var(--border-dim);
   }
 
   .timer-box {
     font-size: 11px;
+  }
+
+  /* Toolbar: wrap to two rows, color/brush on second row */
+  .db-controls {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 8px 10px;
+  }
+
+  .db-tool-group {
+    flex-shrink: 0;
+  }
+
+  /* Color picker group goes to second row */
+  .db-tool-group:last-child {
+    flex: 0 0 100%;
+    border-left: none;
+    padding-left: 0;
+    margin-left: 0;
+    border-top: 2px solid var(--border-dim);
+    padding-top: 8px;
+  }
+
+  /* Palette popup opens upward and stays on screen */
+  .db-palette-popup {
+    left: 0;
+    transform: none;
+    bottom: calc(100% + 8px);
+  }
+
+  .db-brush-slider {
+    flex: 1;
+    width: auto;
+    max-width: 200px;
   }
 
   /* Non-drawer phone: split canvas top / chat bottom */
@@ -892,4 +946,81 @@
   color: var(--muted);
   letter-spacing: 2px;
   justify-content: flex-end;
+}
+
+/* ── Mobile topbar: two rows ── */
+@media (max-width: 600px) {
+  .game-topbar {
+    flex-wrap: wrap;
+    padding: 8px 10px 0;
+    gap: 0;
+  }
+
+  .topbar-left {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .round-tag {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    justify-content: flex-end;
+    font-size: 7px;
+  }
+
+  /* hint moves to second row, full width */
+  .hint-bar {
+    order: 3;
+    width: 100%;
+    font-size: 11px;
+    letter-spacing: 5px;
+    text-align: center;
+    padding: 6px 0 8px;
+    border-top: 1px solid var(--border-dim);
+    margin-top: 6px;
+  }
+
+  /* ── Toolbar: two rows on mobile ── */
+  .db-controls {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 8px 10px;
+  }
+
+  /* tools + edit stay on row 1 */
+  .db-tool-group:nth-child(1),
+  .db-tool-group:nth-child(2) {
+    flex-shrink: 0;
+  }
+
+  /* color picker group goes to row 2, full width */
+  .db-tool-group:nth-child(3) {
+    width: 100%;
+    border-left: none;
+    padding-left: 0;
+    margin-left: 0;
+    border-top: 2px solid var(--border-dim);
+    padding-top: 8px;
+  }
+
+  .db-color-picker-wrap {
+    width: 100%;
+    justify-content: flex-start;
+    gap: 12px;
+  }
+
+  .db-brush-slider {
+    flex: 1;
+    width: auto;
+  }
+
+  /* palette popup opens upward, centered */
+  .db-palette-popup {
+    bottom: calc(100% + 8px);
+    left: 0;
+    transform: none;
+  }
 }
