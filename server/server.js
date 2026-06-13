@@ -90,6 +90,7 @@ function endRound(roomCode) {
             } else {
                 room.gamePhase = 'gameOver';
                 io.to(roomCode).emit('gameOver', {players: room.players});
+                resetRoom(roomCode);
             }
         } else {
             room.currentDrawer = room.players[drawerIndex + 1].id; // next player becomes the drawer
@@ -136,6 +137,28 @@ function calculateScores(room) {
         const drawerPoints = basePoints * (correctGuessers.length / totalGuessers);
         drawer.score += Math.round(drawerPoints);
     }
+}
+
+function resetRoom(roomCode) {
+    setTimeout(() => {
+        const room = rooms.get(roomCode);
+        if (!room || room.players.length === 0) return;
+
+        // reset all scores
+        room.players.forEach(p => p.score = 0);
+
+        // reset game state
+        room.status = 'waiting';
+        room.gamePhase = 'waiting';
+        room.currentDrawer = null;
+        room.currentWord = null;
+        room.wordHint = '';
+        room.wordChoices = [];
+        room.round = 1;
+        room.correctGuessers = [];
+
+        io.to(roomCode).emit('backToLobby', { players: room.players });
+    }, 5000); // 5 second delay so players can see final scores
 }
 
 io.on('connection', (socket) => {
@@ -495,6 +518,7 @@ io.on('connection', (socket) => {
             timers.delete(roomCode);
             room.gamePhase = 'gameOver';
             io.to(roomCode).emit('gameOver', { players: room.players });
+            resetRoom(roomCode);
             return;
         }
         
@@ -538,6 +562,7 @@ io.on('connection', (socket) => {
             timers.delete(roomCode);
             room.gamePhase = 'gameOver';
             io.to(roomCode).emit('gameOver', { players: room.players });
+            resetRoom(roomCode);
             return;
         }
 
