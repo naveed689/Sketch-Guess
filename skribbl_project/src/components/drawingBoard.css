@@ -1107,3 +1107,13 @@
   margin: 0;
   padding: 12px 14px;
 }
+
+/* ── Fix panel title overflow ── */
+.leaderboard-panel .panel-title,
+.chat-panel .panel-title,
+.offcanvas-lb .panel-title,
+.offcanvas-chat .panel-title {
+  margin: 0;
+  padding: 12px 14px;
+  border-bottom: 2px solid var(--border-dim);
+}
