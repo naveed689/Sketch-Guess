@@ -1051,3 +1051,59 @@
     min-width: 52px;
   }
 }
+
+/* ── Leaderboard & Chat title visibility fix ── */
+.leaderboard-panel .panel-title,
+.chat-panel .panel-title,
+.offcanvas-lb .panel-title,
+.offcanvas-chat .panel-title {
+  color: #f5c518;
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+  z-index: 1;
+  padding: 12px 14px;
+  margin: -16px -12px 0;
+}
+
+/* Chat panel padding */
+.chat-messages {
+  padding: 10px 12px;
+}
+
+/* Drawer icon lighter color */
+.lb-drawer-tag {
+  color: #f5c518;
+  font-size: 12px;
+}
+
+/* ── Leaderboard & Chat title visibility fix ── */
+.leaderboard-panel .panel-title,
+.chat-panel .panel-title,
+.offcanvas-lb .panel-title,
+.offcanvas-chat .panel-title {
+  color: #f5c518;
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+  z-index: 1;
+  padding: 12px 14px;
+  margin: -16px -12px 0;
+}
+
+/* ── Drawer icon visibility ── */
+.lb-drawer-tag {
+  color: #f5c518;
+  font-size: 12px;
+}
+
+/* ── Chat panel padding ── */
+.chat-messages {
+  padding: 12px 14px;
+  gap: 8px;
+}
+
+.chat-panel .panel-title {
+  margin: 0;
+  padding: 12px 14px;
+}
