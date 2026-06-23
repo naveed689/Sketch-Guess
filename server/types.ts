@@ -31,7 +31,6 @@ export interface Room {
 
     round: number;
     totalRounds: number;
-    totalGuessers: number;
     timeLeft: number;
 
     status: RoomStatus;

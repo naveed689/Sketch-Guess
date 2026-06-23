@@ -109,7 +109,7 @@ function calculateScores(room: Room): void {
     // base points for guessing correctly, can be adjusted or made more complex later
     const basePoints = 100;
 
-    const totalGuessers = room.totalGuessers; // excluding the drawer
+    const totalGuessers = room.players.length - 1; // excluding the drawer
     const correctGuessers = room.correctGuessers;
     const players = room.players;
 
@@ -238,8 +238,7 @@ io.on('connection', (socket: Socket) => {
             wordChoices: [],       // words to choose from when the drawer is selecting a word
             gamePhase: "waiting",     // waiting | selecting | drawing | roundEnd | gameOver
             timeLeft: 0,
-            wordHint: '',         
-            totalGuessers: 0,      
+            wordHint: '',          
             settings: {            // default room settings, can be made customizable later
                 rounds: 3,
                 drawTime: 30,
@@ -380,7 +379,6 @@ io.on('connection', (socket: Socket) => {
         room.currentWord = word;
         room.gamePhase = 'drawing';
         room.wordChoices = [];
-        room.totalGuessers = room.players.length - 1; // excluding the drawer
 
         // Tell everyone drawing has started
         // Drawer gets the word, others get the length as underscores
@@ -459,7 +457,8 @@ io.on('connection', (socket: Socket) => {
             socket.join(`${roomCode}-guessed`); // add the player to a special Socket.io room for those who guessed correctly
 
             // Check if all players (except the drawer) have guessed correctly
-            if (room.correctGuessers.length === room.totalGuessers) {
+            const nonDrawers = room.players.length - 1; // excluding the drawer
+            if (room.correctGuessers.length === nonDrawers) {
                 endRound(roomCode);
             }
         } else {
