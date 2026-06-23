@@ -1,18 +1,50 @@
+import React from "react";
 import { useRef, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Pen, Eraser, PaintBucket, Undo2, Redo2, Trash2 } from "lucide-react";
-import "./drawingBoard.css";
+
+import type { DrawData, DrawingBoardProps, FillData, Player } from "../types";
 import Chat from "./Chat";
 import Leaderboard from "./Leaderboard";
+import "./drawingBoard.css";
 
-const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }) => {
-    const canvasRef = useRef(null);
-    const contextRef = useRef(null);
+interface Reaction {
+    id: number;
+    emoji: string;
+    left: number;
+}
+
+interface Points {  
+    x: number;
+    y: number;
+}
+
+interface StrokeAction {
+    type: "stroke";
+    tool: string;
+    color: string;
+    size: number;
+    points: Points[];
+}
+
+interface FillAction {
+    type: "fill";
+    x: number;
+    y: number;
+    color: string;
+}
+
+type CanvasAction = StrokeAction | FillAction;
+
+
+const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }: DrawingBoardProps) => {
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const contextRef = useRef<CanvasRenderingContext2D | null>(null);
     const isDrawingRef = useRef(false);
-    const strokesRef = useRef([]);
-    const redoRef = useRef([]);
-    const currentStrokeRef = useRef(null);
-    const incomingStrokeRef = useRef(null);
+    const strokesRef = useRef<CanvasAction[]>([]);
+    const redoRef = useRef<CanvasAction[]>([]);
+    const currentStrokeRef = useRef<CanvasAction | null>(null);
+    const incomingStrokeRef = useRef<CanvasAction | null>(null);
     const roomDataRef = useRef(roomData);
 
     const [tool, setTool] = useState("pen");
@@ -21,7 +53,7 @@ const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }) => {
     const [canUndo, setCanUndo] = useState(false);
     const [canRedo, setCanRedo] = useState(false);
     const [showPalette, setShowPalette] = useState(false);
-    const colorPickerRef = useRef(null);
+    const colorPickerRef = useRef<HTMLDivElement | null>(null);
 
     const colorRef = useRef(color);
     const brushSizeRef = useRef(brushSize);
@@ -30,19 +62,19 @@ const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }) => {
     const presetColors = ["#000000","#ffffff","#ff0000","#ffa500","#ffff00","#00ff00","#0000ff","#800080","#8b4513","#ff69b4"];
 
     const [hasGuessed, setHasGuessed] = useState(false);
-    const [correctGuessers, setCorrectGuessers] = useState(new Set());
+    const [correctGuessers, setCorrectGuessers] = useState<Set<string>>(new Set());
     const isHost = roomData.players.find(p => p.id === socket.id)?.isHost || false;
 
     const [gamePhase, setGamePhase] = useState(roomData.gamePhase);
     const [currentDrawer, setCurrentDrawer] = useState(roomData.currentDrawer);
-    const [wordChoices, setWordChoices] = useState([]);
-    const [currentWord, setCurrentWord] = useState(null);
+    const [wordChoices, setWordChoices] = useState<string[]>([]);
+    const [currentWord, setCurrentWord] = useState<string | null>(null);
     const [wordHint, setWordHint] = useState(roomData.wordHint || '');
-    const [correctWord, setCorrectWord] = useState(null);
+    const [correctWord, setCorrectWord] = useState<string | null>(null);
     const [round, setRound] = useState(roomData.round);
     const [pointsGained, setPointsGained] = useState(new Map());
     const [timeLeft, setTimeLeft] = useState(roomData.settings.drawTime);
-    const [reactions, setReactions] = useState([]);
+    const [reactions, setReactions] = useState<Reaction[]>([]);
 
     // responsive offcanvas state
     const [showLbOffcanvas, setShowLbOffcanvas] = useState(false);
@@ -50,7 +82,7 @@ const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }) => {
     const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
 
     const emojiList = ['👍', '😂', '🔥', '😮', '❤️', '👏'];
-    const isDrawer = socket.id === currentDrawer;
+    const isDrawer = socket.id !== undefined && socket.id === currentDrawer;
 
     // determine body class for phone layout
     const getBodyClass = () => {
@@ -79,7 +111,9 @@ const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }) => {
             if (data.tool === 'eraser') context.lineWidth = 20;
             context.lineTo(data.x, data.y);
             context.stroke();
-            incomingStrokeRef.current?.points.push({ x: data.x, y: data.y });
+            if (incomingStrokeRef.current && incomingStrokeRef.current.type === "stroke") {
+                incomingStrokeRef.current?.points.push({ x: data.x, y: data.y } as Points);
+            }
         });
 
         socket.on('drawEnd', () => {
@@ -112,14 +146,14 @@ const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }) => {
 
         socket.on('undo', () => {
             if (strokesRef.current.length === 0) return;
-            redoRef.current.push(strokesRef.current.pop());
+            redoRef.current.push(strokesRef.current.pop()!);
             redraw();
             updateHistoryState();
         });
 
         socket.on('redo', () => {
             if (redoRef.current.length === 0) return;
-            strokesRef.current.push(redoRef.current.pop());
+            strokesRef.current.push(redoRef.current.pop()!);
             redraw();
             updateHistoryState();
         });
@@ -129,11 +163,11 @@ const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }) => {
             setCurrentDrawer(currentDrawer);
             setGamePhase('selecting');
             setHasGuessed(false);
-            setRoomData(prev => ({ ...prev, currentDrawer, wordChoices: [] }));
+            setRoomData(prev => prev ? ({ ...prev, currentDrawer, wordChoices: [] }) : prev);
             setCorrectGuessers(new Set());
         });
 
-        socket.on('roundEnded', ({ currentWord, players }) => {
+        socket.on('roundEnded', ({ currentWord, players } : { currentWord: string; players: Player[] }) => {
             const gained = new Map(
                 players.map(p => {
                     const old = roomDataRef.current.players.find(op => op.id === p.id);
@@ -142,7 +176,7 @@ const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }) => {
             );
             setPointsGained(gained);
             setWordHint('');
-            setRoomData(prev => ({ ...prev, players }));
+            setRoomData(prev => prev ? ({ ...prev, players }) : prev);
             setCorrectWord(currentWord);
             setGamePhase('roundEnd');
         });
@@ -153,12 +187,12 @@ const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }) => {
             setGamePhase('selecting');
             setRound(round);
             setHasGuessed(false);
-            setRoomData(prev => ({ ...prev, currentDrawer, round, wordChoices: [] }));
+            setRoomData(prev => prev ? ({ ...prev, currentDrawer, round, wordChoices: [] }) : prev);
             setCorrectGuessers(new Set());
         });
 
         socket.on('gameOver', ({ players }) => {
-            setRoomData(prev => ({ ...prev, players }));
+            setRoomData(prev => prev ? ({ ...prev, players }) : prev);
             setGamePhase('gameOver');
         });
 
@@ -186,7 +220,7 @@ const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }) => {
         });
 
         socket.on('playersUpdated', (players) => {
-            setRoomData(prev => ({ ...prev, players }));
+            setRoomData(prev => prev ? ({ ...prev, players }) : prev);
         });
 
         socket.on('reaction', ({ emoji }) => {
@@ -201,7 +235,7 @@ const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }) => {
         });
 
         socket.on('backToLobby', ({ players }) => {
-            setRoomData(prev => ({
+            setRoomData(prev => prev ? ({
                 ...prev,
                 players,
                 status: 'waiting',
@@ -211,7 +245,7 @@ const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }) => {
                 wordHint: '',
                 wordChoices: [],
                 round: 1,
-            }));
+            }) : prev);
             setScreen('waiting');
         });
 
@@ -227,13 +261,16 @@ const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }) => {
         if (!canvas) return;
         canvas.width = 800;
         canvas.height = 500;
+
         const context = canvas.getContext("2d");
+        if(!context) return;
         contextRef.current = context;
+
         context.lineWidth = brushSize;
         context.lineCap = "round";
         context.strokeStyle = color;
 
-        const getTouchPos = (touch) => {
+        const getTouchPos = (touch: Touch) => {
             const rect = canvas.getBoundingClientRect();
             const scaleX = canvas.width / rect.width;
             const scaleY = canvas.height / rect.height;
@@ -243,9 +280,10 @@ const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }) => {
             };
         };
 
-        const handleTouchStart = (e) => {
+        const handleTouchStart = (e: TouchEvent) => {
             e.preventDefault();
             if (socket.id !== roomDataRef.current?.currentDrawer) return;
+            if (!contextRef.current) return;
             const { x, y } = getTouchPos(e.touches[0]);
             const ctx = contextRef.current;
             currentStrokeRef.current = { type: "stroke", tool: toolRef.current, color: colorRef.current, size: brushSizeRef.current, points: [] };
@@ -258,20 +296,25 @@ const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }) => {
             isDrawingRef.current = true;
         };
 
-        const handleTouchMove = (e) => {
+        const handleTouchMove = (e: TouchEvent) => {
             e.preventDefault();
             if (!isDrawingRef.current) return;
+            if (!contextRef.current) return;
             const { x, y } = getTouchPos(e.touches[0]);
             const ctx = contextRef.current;
             ctx.lineTo(x, y);
             ctx.stroke();
             socket.emit('draw', { x, y, color: colorRef.current, size: brushSizeRef.current, tool: toolRef.current, roomCode: roomDataRef.current.code });
-            currentStrokeRef.current?.points.push({ x, y });
+            if(currentStrokeRef.current?.type === "stroke") {
+                currentStrokeRef.current?.points.push({ x, y });
+            }
         };
 
-        const handleTouchEnd = (e) => {
+        const handleTouchEnd = (e: TouchEvent) => {
             e.preventDefault();
             if (!isDrawingRef.current) return;
+            if (!contextRef.current) return;
+            if (!currentStrokeRef.current) return;
             contextRef.current.closePath();
             socket.emit('drawEnd', { roomCode: roomDataRef.current.code });
             strokesRef.current.push(currentStrokeRef.current);
@@ -308,9 +351,9 @@ const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }) => {
     useEffect(() => { setCanUndo(strokesRef.current.length > 0); setCanRedo(redoRef.current.length > 0); }, []);
 
     useEffect(() => {
-        const handleOutside = (e) => {
+        const handleOutside = (e: MouseEvent | TouchEvent) => {
             if (!showPalette) return;
-            if (colorPickerRef.current && !colorPickerRef.current.contains(e.target)) setShowPalette(false);
+            if (colorPickerRef.current && !colorPickerRef.current.contains(e.target as Node)) setShowPalette(false);
         };
         window.addEventListener("mousedown", handleOutside);
         return () => window.removeEventListener("mousedown", handleOutside);
@@ -345,10 +388,15 @@ const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }) => {
         setCanRedo(redoRef.current.length > 0);
     };
 
-    const handleMouseDown = (e) => {
+    const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
         if (socket.id !== currentDrawer) return;
+
         const canvas = canvasRef.current;
+        if (!canvas) return;
+
         const context = contextRef.current;
+        if (!context) return;
+
         const rect = canvas.getBoundingClientRect();
         const scaleX = canvas.width / rect.width;
         const scaleY = canvas.height / rect.height;
@@ -358,7 +406,7 @@ const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }) => {
         if (tool === "fill") {
             floodFill(x, y);
             strokesRef.current.push({ type: "fill", x, y, color });
-            socket.emit('fill', { x, y, color: colorRef.current, roomCode: roomData.code });
+            socket.emit('fill', { x, y, color: colorRef.current, roomCode: roomData.code } as FillData);
             redoRef.current = [];
             updateHistoryState();
             return;
@@ -378,6 +426,9 @@ const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }) => {
 
     const handleMouseUp = () => {
         if (!isDrawingRef.current) return;
+        if (!contextRef.current) return;
+        if (!currentStrokeRef.current) return;
+
         contextRef.current.closePath();
         socket.emit('drawEnd', { roomCode: roomData.code });
         strokesRef.current.push(currentStrokeRef.current);
@@ -387,10 +438,17 @@ const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }) => {
         updateHistoryState();
     };
 
-    const handleMouseMove = (e) => {
+    const handleMouseMove = (e: MouseEvent) => {
         if (!isDrawingRef.current) return;
+
         const canvas = canvasRef.current;
+        if (!canvas) return;
+
         const context = contextRef.current;
+        if (!context) return;
+
+        if (!currentStrokeRef.current) return;
+        
         const rect = canvas.getBoundingClientRect();
         const scaleX = canvas.width / rect.width;
         const scaleY = canvas.height / rect.height;
@@ -401,13 +459,20 @@ const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }) => {
 
         context.lineTo(x, y);
         context.stroke();
-        socket.emit('draw', { x, y, color: colorRef.current, size: brushSizeRef.current, tool: toolRef.current, roomCode: roomData.code });
-        currentStrokeRef.current.points.push({ x, y });
+        socket.emit('draw', { x, y, color: colorRef.current, size: brushSizeRef.current, tool: toolRef.current, roomCode: roomData.code } as DrawData);
+        
+        if(currentStrokeRef.current.type === "stroke"){
+            currentStrokeRef.current.points.push({ x, y });
+        }
     };
 
     const clearCanvas = () => {
         const canvas = canvasRef.current;
+        if (!canvas) return;
+
         const context = contextRef.current;
+        if (!context) return;
+
         context.clearRect(0, 0, canvas.width, canvas.height);
         strokesRef.current = []; redoRef.current = [];
         currentStrokeRef.current = null; isDrawingRef.current = false;
@@ -425,26 +490,28 @@ const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }) => {
         updateHistoryState();
     };
 
-    const floodFill = (startX, startY, fillCol = color) => {
+    const floodFill = (startX: number, startY: number, fillCol: string = color) => {
+        if(canvasRef.current === null || contextRef.current === null) return;
         const canvas = canvasRef.current;
         const ctx = contextRef.current;
+        if (!canvas || !ctx) return;
         const width = canvas.width, height = canvas.height;
         const imageData = ctx.getImageData(0, 0, width, height);
         const data = imageData.data;
         const stack = [[startX, startY]];
-        const getIndex = (x, y) => (y * width + x) * 4;
+        const getIndex = (x: number, y: number) => (y * width + x) * 4;
         const startIndex = getIndex(startX, startY);
         const targetColor = [data[startIndex], data[startIndex+1], data[startIndex+2], data[startIndex+3]];
         const fillColor = hexToRgba(fillCol);
         const tolerance = 45;
-        const colorsMatch = (i) =>
+        const colorsMatch = (i: number) =>
             Math.abs(data[i]-targetColor[0]) <= tolerance &&
             Math.abs(data[i+1]-targetColor[1]) <= tolerance &&
             Math.abs(data[i+2]-targetColor[2]) <= tolerance &&
             Math.abs(data[i+3]-targetColor[3]) <= tolerance;
         if (targetColor[0]===fillColor[0] && targetColor[1]===fillColor[1] && targetColor[2]===fillColor[2]) return;
         while (stack.length) {
-            const [x, y] = stack.pop();
+            const [x, y] = stack.pop()!;
             let left = x, right = x;
             while (left >= 0 && colorsMatch(getIndex(left, y))) left--;
             left++;
@@ -460,28 +527,30 @@ const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }) => {
         ctx.putImageData(imageData, 0, 0);
     };
 
-    const hexToRgba = (hex) => {
+    const hexToRgba = (hex: string) => {
         const bigint = parseInt(hex.slice(1), 16);
         return [(bigint >> 16) & 255, (bigint >> 8) & 255, bigint & 255, 255];
     };
 
     const undo = () => {
         if (strokesRef.current.length === 0) return;
-        redoRef.current.push(strokesRef.current.pop());
+        redoRef.current.push(strokesRef.current.pop()!);
         redraw(); updateHistoryState();
         socket.emit('undo', { roomCode: roomData.code });
     };
 
     const redo = () => {
         if (redoRef.current.length === 0) return;
-        strokesRef.current.push(redoRef.current.pop());
+        strokesRef.current.push(redoRef.current.pop()!);
         redraw(); updateHistoryState();
         socket.emit('redo', { roomCode: roomData.code });
     };
 
     const redraw = () => {
         const canvas = canvasRef.current;
+        if(!canvas) return;
         const context = contextRef.current;
+        if (!context) return;
         context.clearRect(0, 0, canvas.width, canvas.height);
         for (const action of strokesRef.current) {
             if (action.type === "fill") floodFill(action.x, action.y, action.color);
@@ -489,8 +558,9 @@ const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }) => {
         }
     };
 
-    const drawStroke = (stroke) => {
+    const drawStroke = (stroke: StrokeAction) => {
         const context = contextRef.current;
+        if (!context) return;
         context.lineWidth = stroke.size;
         context.strokeStyle = stroke.color;
         context.globalCompositeOperation = stroke.tool === "eraser" ? "destination-out" : "source-over";
@@ -500,15 +570,15 @@ const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }) => {
         context.stroke();
     };
 
-    const sendReaction = (emoji) => socket.emit('reaction', { roomCode: roomData.code, emoji });
+    const sendReaction = (emoji: string) => socket.emit('reaction', { roomCode: roomData.code, emoji });
 
-    const handleKick = (playerId) => socket.emit('kickPlayer', { roomCode: roomData.code, playerId });
+    const handleKick = (playerId: string) => socket.emit('kickPlayer', { roomCode: roomData.code, playerId });
 
     // overlay animation variants — slide up from bottom
     const overlayVariants = {
         hidden:  { y: "100%", opacity: 0 },
-        visible: { y: 0, opacity: 1, transition: { duration: 0.35, ease: "easeOut" } },
-        exit:    { y: "100%", opacity: 0, transition: { duration: 0.25, ease: "easeIn" } }
+        visible: { y: 0, opacity: 1, transition: { duration: 0.35, ease: "easeOut" as const } },
+        exit:    { y: "100%", opacity: 0, transition: { duration: 0.25, ease: "easeIn" as const } }
     };
 
     const backdropVariants = {
@@ -519,14 +589,14 @@ const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }) => {
 
     const offcanvasLbVariants = {
         hidden:  { x: "-100%", opacity: 0 },
-        visible: { x: 0, opacity: 1, transition: { duration: 0.3, ease: "easeOut" } },
-        exit:    { x: "-100%", opacity: 0, transition: { duration: 0.22, ease: "easeIn" } }
+        visible: { x: 0, opacity: 1, transition: { duration: 0.3, ease: "easeOut" as const } },
+        exit:    { x: "-100%", opacity: 0, transition: { duration: 0.22, ease: "easeIn" as const } }
     };
 
     const offcanvasChatVariants = {
         hidden:  { x: "100%", opacity: 0 },
-        visible: { x: 0, opacity: 1, transition: { duration: 0.3, ease: "easeOut" } },
-        exit:    { x: "100%", opacity: 0, transition: { duration: 0.22, ease: "easeIn" } }
+        visible: { x: 0, opacity: 1, transition: { duration: 0.3, ease: "easeOut" as const } },
+        exit:    { x: "100%", opacity: 0, transition: { duration: 0.22, ease: "easeIn" as const } }
     };
 
     const sorted = [...roomData.players].sort((a, b) => b.score - a.score);
@@ -568,7 +638,7 @@ const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }) => {
                         correctGuessers={correctGuessers}
                         isHost={isHost}
                         onKick={handleKick}
-                        socketId={socket.id}
+                        socketId={socket.id ?? null}
                         currentDrawer={currentDrawer}
                     />
                 </div>
@@ -651,7 +721,7 @@ const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }) => {
                     <Chat
                         socket={socket}
                         roomData={roomData}
-                        playerName={roomData?.players?.find(p => p.id === socket.id)?.name}
+                        playerName={roomData?.players?.find(p => p.id === socket.id)!.name}
                         wordHint={gamePhase === 'drawing' ? wordHint : null}
                         gamePhase={gamePhase}
                         hasGuessed={hasGuessed}
@@ -666,7 +736,7 @@ const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }) => {
                     <>
                         <motion.div className="offcanvas-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowLbOffcanvas(false)} />
                         <motion.div className="offcanvas-lb" variants={offcanvasLbVariants} initial="hidden" animate="visible" exit="exit">
-                            <Leaderboard players={roomData.players} correctGuessers={correctGuessers} isHost={isHost} onKick={(id) => { handleKick(id); setShowLbOffcanvas(false); }} panelTitle="▸ SCORES" socketId={socket.id} currentDrawer={currentDrawer} />
+                            <Leaderboard players={roomData.players} correctGuessers={correctGuessers} isHost={isHost} onKick={(id) => { handleKick(id); setShowLbOffcanvas(false); }} panelTitle="▸ SCORES" socketId={socket.id ?? null} currentDrawer={currentDrawer} />
                         </motion.div>
                     </>
                 )}
@@ -681,7 +751,7 @@ const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }) => {
                             <Chat
                                 socket={socket}
                                 roomData={roomData}
-                                playerName={roomData?.players?.find(p => p.id === socket.id)?.name}
+                                playerName={roomData?.players?.find(p => p.id === socket.id)!.name}
                                 wordHint={gamePhase === 'drawing' ? wordHint : null}
                                 gamePhase={gamePhase}
                                 hasGuessed={hasGuessed}

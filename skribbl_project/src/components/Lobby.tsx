@@ -1,14 +1,15 @@
 import { useRef, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import type { LobbyProps, Room } from "../types";
 import "./lobby.css";
 
-const Lobby = ({ socket, setScreen, setRoomData, setPlayerName }) => {
-    const [name, setName] = useState("");
-    const [roomCode, setRoomCode] = useState("");
-    const [showModal, setShowModal] = useState(false);
-    const [nameError, setNameError] = useState("");
-    const [roomError, setRoomError] = useState("");
-    const pendingScreenSwitch = useRef(false);
+const Lobby = ({ socket, setScreen, setRoomData, setPlayerName }: LobbyProps) => {
+    const [name, setName] = useState<string>("");
+    const [roomCode, setRoomCode] = useState<string>("");
+    const [showModal, setShowModal] = useState<boolean>(false);
+    const [nameError, setNameError] = useState<string>("");
+    const [roomError, setRoomError] = useState<string>("");
+    const pendingScreenSwitch = useRef<boolean>(false);
 
     useEffect(() => {
         socket.on('roomCreated', () => {
@@ -81,26 +82,26 @@ const Lobby = ({ socket, setScreen, setRoomData, setPlayerName }) => {
     // animation variants
     const titleVariants = {
         hidden: { y: -80, opacity: 0 },
-        visible: { y: 0, opacity: 1, transition: { duration: 0.5, ease: "easeOut" } },
-        exit: { y: -80, opacity: 0, transition: { duration: 0.35, ease: "easeIn" } }
+        visible: { y: 0, opacity: 1, transition: { duration: 0.5, ease: "easeOut" as const } },
+        exit: { y: -80, opacity: 0, transition: { duration: 0.35, ease: "easeIn" as const } }
     };
 
     const inputVariants = {
         hidden: { x: -80, opacity: 0 },
-        visible: { x: 0, opacity: 1, transition: { duration: 0.45, ease: "easeOut", delay: 0.15 } },
-        exit: { x: -80, opacity: 0, transition: { duration: 0.3, ease: "easeIn" } }
+        visible: { x: 0, opacity: 1, transition: { duration: 0.45, ease: "easeOut" as const, delay: 0.15 } },
+        exit: { x: -80, opacity: 0, transition: { duration: 0.3, ease: "easeIn" as const } }
     };
 
     const btnVariants = {
         hidden: { y: 60, opacity: 0 },
-        visible: { y: 0, opacity: 1, transition: { duration: 0.45, ease: "easeOut", delay: 0.28 } },
-        exit: { y: 60, opacity: 0, transition: { duration: 0.3, ease: "easeIn" } }
+        visible: { y: 0, opacity: 1, transition: { duration: 0.45, ease: "easeOut" as const, delay: 0.28 } },
+        exit: { y: 60, opacity: 0, transition: { duration: 0.3, ease: "easeIn" as const } }
     };
 
     const modalVariants = {
         hidden: { scale: 0.8, opacity: 0 },
-        visible: { scale: 1, opacity: 1, transition: { duration: 0.2, ease: "easeOut" } },
-        exit: { scale: 0.8, opacity: 0, transition: { duration: 0.15, ease: "easeIn" } }
+        visible: { scale: 1, opacity: 1, transition: { duration: 0.2, ease: "easeOut" as const } },
+        exit: { scale: 0.8, opacity: 0, transition: { duration: 0.15, ease: "easeIn" as const } }
     };
 
     return (

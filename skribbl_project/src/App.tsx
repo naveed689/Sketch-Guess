@@ -4,13 +4,14 @@ import { AnimatePresence } from 'framer-motion';
 import Lobby from './components/Lobby';
 import WaitingRoom from './components/WaitingRoom';
 import DrawingBoard from './components/DrawingBoard';
+import type { Room, Screen } from './types';
 
 const socket = io(import.meta.env.VITE_SERVER_URL);
 
 const App = () => {
-    const [screen, setScreen] = useState("lobby");
-    const [roomData, setRoomData] = useState(null);
-    const [playerName, setPlayerName] = useState("");
+    const [screen, setScreen] = useState<Screen>("lobby");
+    const [roomData, setRoomData] = useState<Room | null>(null);
+    const [playerName, setPlayerName] = useState<string>("");
 
     return (
         <AnimatePresence mode="wait">
@@ -22,7 +23,7 @@ const App = () => {
                     setRoomData={setRoomData}
                     setPlayerName={setPlayerName}
                 />}
-            {screen === "waiting" &&
+            {screen === "waiting" && roomData && playerName &&
                 <WaitingRoom
                     key="waiting"
                     socket={socket}
@@ -31,7 +32,7 @@ const App = () => {
                     setScreen={setScreen}
                     playerName={playerName}
                 />}
-            {screen === "game" &&
+            {screen === "game" && roomData && playerName &&
                 <DrawingBoard
                     key="game"
                     socket={socket}

@@ -1,45 +1,46 @@
 import { useRef, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { type Player, type Room, type RoomSettings, type WaitingRoomProps } from "../types";
 import "./waitingRoom.css";
 
-const WaitingRoom = ({ socket, roomData, setRoomData, setScreen, playerName }) => {
-    const [players, setPlayers] = useState([]);
-    const [isHost, setIsHost] = useState(false);
-    const [settings, setSettings] = useState({ rounds: 3, drawTime: 80, maxPlayers: 8 });
-    const [confirmKick, setConfirmKick] = useState(null);
-    const [hoveredId, setHoveredId] = useState(null);
-    const [notEnoughError, setNotEnoughError] = useState(false);
-    const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+const WaitingRoom = ({ socket, roomData, setRoomData, setScreen, playerName }: WaitingRoomProps) => {
+    const [players, setPlayers] = useState<Player[]>([]);
+    const [isHost, setIsHost] = useState<boolean>(false);
+    const [settings, setSettings] = useState<RoomSettings>({ rounds: 3, drawTime: 80, maxPlayers: 8 });
+    const [confirmKick, setConfirmKick] = useState<Player | null>(null);
+    const [hoveredId, setHoveredId] = useState<string | null>(null);
+    const [notEnoughError, setNotEnoughError] = useState<boolean>(false);
+    const [showLeaveConfirm, setShowLeaveConfirm] = useState<boolean>(false);
 
     const handleStartGame = () => {
         if (!isHost) return;
-        socket.emit('startGame', { roomCode: roomData.code });
+        socket.emit('startGame', { roomCode: roomData!.code });
     };
 
-    const handleSettingChange = (key, value) => {
+    const handleSettingChange = (key: keyof RoomSettings, value: string) => {
         const updated = { ...settings, [key]: Number(value) };
         setSettings(updated);
-        socket.emit('updateSettings', { roomCode: roomData.code, settings: updated });
+        socket.emit('updateSettings', { roomCode: roomData!.code, settings: updated });
     };
 
-    const handleKick = (playerId) => {
-        socket.emit('kickPlayer', { roomCode: roomData.code, playerId });
+    const handleKick = (playerId: string) => {
+        socket.emit('kickPlayer', { roomCode: roomData!.code, playerId });
         setConfirmKick(null);
     };
 
     useEffect(() => {
-        socket.on('gameStarted', (data) => {
+        socket.on('gameStarted', (data: Room) => {
             setRoomData(prev => ({ ...prev, ...data, gamePhase: 'selecting' }));
             setScreen('game');
         });
-        socket.on('roomUpdated', (room) => {
+        socket.on('roomUpdated', (room: Room) => {
             setRoomData(room);
         });
         socket.on('kicked', () => {
             setScreen('lobby');
             setRoomData(null);
         });
-        socket.on('playersUpdated', (updatedPlayers) => {
+        socket.on('playersUpdated', (updatedPlayers: Player[]) => {
             setPlayers(updatedPlayers);
             const currentPlayer = updatedPlayers.find(p => p.name === playerName);
             setIsHost(currentPlayer?.isHost || false);
@@ -74,25 +75,25 @@ const WaitingRoom = ({ socket, roomData, setRoomData, setScreen, playerName }) =
 
     const headerVariants = {
         hidden: { y: -60, opacity: 0 },
-        visible: { y: 0, opacity: 1, transition: { duration: 0.45, ease: "easeOut" } },
+        visible: { y: 0, opacity: 1, transition: { duration: 0.45, ease: "easeOut" as const } },
         exit: { y: -60, opacity: 0, transition: { duration: 0.3 } }
     };
 
     const leftVariants = {
         hidden: { x: -80, opacity: 0 },
-        visible: { x: 0, opacity: 1, transition: { duration: 0.45, ease: "easeOut", delay: 0.15 } },
+        visible: { x: 0, opacity: 1, transition: { duration: 0.45, ease: "easeOut" as const, delay: 0.15 } },
         exit: { x: -80, opacity: 0, transition: { duration: 0.3 } }
     };
 
     const rightVariants = {
         hidden: { x: 80, opacity: 0 },
-        visible: { x: 0, opacity: 1, transition: { duration: 0.45, ease: "easeOut", delay: 0.15 } },
+        visible: { x: 0, opacity: 1, transition: { duration: 0.45, ease: "easeOut" as const, delay: 0.15 } },
         exit: { x: 80, opacity: 0, transition: { duration: 0.3 } }
     };
 
     const bottomVariants = {
         hidden: { y: 60, opacity: 0 },
-        visible: { y: 0, opacity: 1, transition: { duration: 0.45, ease: "easeOut", delay: 0.28 } },
+        visible: { y: 0, opacity: 1, transition: { duration: 0.45, ease: "easeOut" as const, delay: 0.28 } },
         exit: { y: 60, opacity: 0, transition: { duration: 0.3 } }
     };
 

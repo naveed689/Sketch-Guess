@@ -1,14 +1,15 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { type LeaderboardProps, type Player } from "../types";
 
-const Leaderboard = ({ players, correctGuessers, isHost, onKick, panelTitle = "▸ SCORES", socketId = null, currentDrawer = null }) => {
-    const [hoveredId, setHoveredId] = useState(null);
-    const [confirmKick, setConfirmKick] = useState(null);
+const Leaderboard = ({ players, correctGuessers, isHost, onKick, panelTitle = "▸ SCORES", socketId = null, currentDrawer = null }: LeaderboardProps) => {
+    const [hoveredId, setHoveredId] = useState<string | null>(null);
+    const [confirmKick, setConfirmKick] = useState<Player | null>(null);
 
     const sorted = [...players].sort((a, b) => b.score - a.score);
 
     const handleKickConfirm = () => {
-        onKick(confirmKick.id);
+        onKick(confirmKick!.id);
         setConfirmKick(null);
     };
 

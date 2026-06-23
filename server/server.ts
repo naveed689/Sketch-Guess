@@ -560,4 +560,8 @@ io.on('connection', (socket: Socket) => {
             endRound(roomCode);
         }
     });
-})
+});
+
+httpServer.listen(process.env.PORT || 3001, () => {
+    console.log('Server running', process.env.PORT || 3001);
+});

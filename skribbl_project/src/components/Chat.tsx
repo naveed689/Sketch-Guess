@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from "react";
+import { type ChatMessage, type ChatProps } from "../types";
 
-const Chat = ({ socket, roomData, playerName, wordHint, gamePhase, hasGuessed, setHasGuessed }) => {
+const Chat = ({ socket, roomData, playerName, wordHint, gamePhase, hasGuessed, setHasGuessed }: ChatProps) => {
     const [message, setMessage] = useState("");
-    const [chatMessages, setChatMessages] = useState([]);
-    const chatContainerRef = useRef(null);
+    const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+    const chatContainerRef = useRef<HTMLDivElement | null>(null);
     const isFirstRender = useRef(true);
     const hintWordLength = wordHint ? wordHint.split(' ').length : 0;
 
@@ -21,7 +22,7 @@ const Chat = ({ socket, roomData, playerName, wordHint, gamePhase, hasGuessed, s
                 const updated = [...prev, {
                     playerName: 'Game',
                     message: `You guessed it! Word was "${word}"`,
-                    type: 'guessed'
+                    type: 'guessed' as const
                 }];
                 return updated.length > 50 ? updated.slice(-50) : updated;
             });
@@ -29,14 +30,14 @@ const Chat = ({ socket, roomData, playerName, wordHint, gamePhase, hasGuessed, s
 
         socket.on('correctGuesser', ({ playerName: guesser }) => {
             setChatMessages(prev => {
-                const updated = [...prev, { playerName: 'Game', message: `${guesser} guessed the word!`, type: 'game' }];
+                const updated = [...prev, { playerName: 'Game', message: `${guesser} guessed the word!`, type: 'game' as const }];
                 return updated.length > 50 ? updated.slice(-50) : updated;
             });
         });
 
         socket.on('soClose', () => {
             setChatMessages(prev => {
-                const updated = [...prev, { playerName: 'Game', message: "So close! Keep trying!", type: 'game' }];
+                const updated = [...prev, { playerName: 'Game', message: "So close! Keep trying!", type: 'game' as const }];
                 return updated.length > 50 ? updated.slice(-50) : updated;
             });
         });
@@ -67,7 +68,7 @@ const Chat = ({ socket, roomData, playerName, wordHint, gamePhase, hasGuessed, s
             && message.length <= hintWordLength + 1) {
             socket.emit('submitGuess', { guess: message, roomCode: roomData.code });
             setChatMessages(prev => {
-                const updated = [...prev, { playerName, message, type: 'normal' }];
+                const updated = [...prev, { playerName, message, type: 'normal' as const }];
                 return updated.length > 50 ? updated.slice(-50) : updated;
             });
         } else {
@@ -77,7 +78,7 @@ const Chat = ({ socket, roomData, playerName, wordHint, gamePhase, hasGuessed, s
                 socket.emit('chatMessage', { message, roomCode: roomData.code });
             }
             setChatMessages(prev => {
-                const updated = [...prev, { playerName, message, type: hasGuessed ? 'guessed' : 'normal' }];
+                const updated = [...prev, { playerName, message, type: hasGuessed ? 'guessed' : 'normal' } as ChatMessage];
                 return updated.length > 50 ? updated.slice(-50) : updated;
             });
         }
