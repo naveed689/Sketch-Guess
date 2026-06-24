@@ -69,6 +69,12 @@ function endRound(roomCode: string): void {
     });
 
     setTimeout(() => {
+        // Reset strokes and redo stack for the next round
+        room.strokes = [];
+        room.redoStack = [];
+        room.currentStroke = null;
+
+        // Determine the next drawer and start the next round or end the game
         if (!room || room.players.length === 0) return; // room empty, abort
         const drawerIndex = room.players.findIndex(p => p.id === room.currentDrawer);
 
@@ -165,46 +171,113 @@ io.on('connection', (socket: Socket) => {
     // Canvas events
     socket.on('draw', (data: DrawData) => {
 
-        const {roomCode} = data;
+        const { roomCode, ...strokeData } = data;
         if (!roomCode) return; // no room code, ignore
+
+        const room = rooms.get(roomCode);
+        if (!room) return; // room not found, ignore
+        
+        if (!room.currentStroke) return;
+
+        room.currentStroke!.points.push({ x: strokeData.x, y: strokeData.y });
 
         // forward to everyone except the sender
         socket.to(roomCode).emit('draw', data);
     });
 
     socket.on('drawStart', (data: DrawData) => {
-        const {roomCode} = data;
+        const { roomCode, ...strokeData } = data;
         if (!roomCode) return; // no room code, ignore
+
+        const room = rooms.get(roomCode);
+        if (!room) return; // room not found, ignore
+
+        room.currentStroke = {
+            type: "stroke",
+            tool: strokeData.tool,
+            color: strokeData.color,
+            size: strokeData.size,
+            points: [{ x: strokeData.x, y: strokeData.y }]
+        };
+
+        console.log('stored stroke color:', strokeData.color);
+
         socket.to(roomCode).emit('drawStart', data);
     });
 
     socket.on('drawEnd', (data: { roomCode: string }) => {
         const {roomCode} = data;
         if (!roomCode) return; // no room code, ignore
+
+        const room = rooms.get(roomCode);
+        if (!room) return; // room not found, ignore
+
+        if (room.currentStroke) {
+            room.strokes.push(room.currentStroke);
+            room.currentStroke = null;
+        }
+        
         socket.to(roomCode).emit('drawEnd', data);
     });
 
     socket.on('fill', (data: FillData) => {
         const {roomCode} = data;
         if (!roomCode) return; // no room code, ignore
+
+        const room = rooms.get(roomCode);
+        if (!room) return; // room not found, ignore
+
+        room.strokes.push({
+            type: "fill",
+            x: data.x,
+            y: data.y,
+            color: data.color
+        });
+
         socket.to(roomCode).emit('fill', data);
     });
 
     socket.on('clear', (data: { roomCode: string }) => {
         const {roomCode} = data;
         if (!roomCode) return; // no room code, ignore
+
+        const room = rooms.get(roomCode);
+        if (!room) return; // room not found, ignore
+
+        room.strokes = [];
+        room.redoStack = [];
+        room.currentStroke = null;
+
         socket.to(roomCode).emit('clear', data);
     });
 
     socket.on('undo', (data: { roomCode: string }) => {
         const {roomCode} = data;
         if (!roomCode) return; // no room code, ignore
+
+        const room = rooms.get(roomCode);
+        if (!room) return; // room not found, ignore
+
+        if (room.strokes.length > 0) {
+            const lastAction = room.strokes.pop()!;
+            room.redoStack.push(lastAction);
+        }
+        
         socket.to(roomCode).emit('undo', data);
     });
 
     socket.on('redo', (data: { roomCode: string }) => {
         const {roomCode} = data;
         if (!roomCode) return; // no room code, ignore
+
+        const room = rooms.get(roomCode);
+        if (!room) return; // room not found, ignore
+
+        if (room.redoStack.length > 0) {
+            const redoAction = room.redoStack.pop()!;
+            room.strokes.push(redoAction);
+        }
+
         socket.to(roomCode).emit('redo', data);
     });
     //End of canvas events
@@ -245,6 +318,9 @@ io.on('connection', (socket: Socket) => {
                 maxPlayers: 8
             },
             correctGuessers: [],   // ids of players who guessed correctly this round
+            strokes: [],            // array of drawing actions for the canvas
+            currentStroke: null,
+            redoStack: []
         };
 
         // 4. make this socket officially join the Socket.io room
@@ -312,11 +388,18 @@ io.on('connection', (socket: Socket) => {
                 safeRoom.currentWord = null;
                 safeRoom.wordHint = '';
             }
+
+            if (room.gamePhase === 'drawing') {
+                console.log('sending syncCanvas', room.strokes.length);
+                console.log('syncCanvas strokes:', JSON.stringify(room.strokes))
+                safeRoom.strokes = room.strokes;
+            }
             socket.emit('roomUpdated', safeRoom);
             socket.to(roomCode).emit('playersUpdated', room.players);
         } else {
             io.to(roomCode).emit('roomUpdated', room);
         }
+
         console.log(`${data.name} joined room ${roomCode}`);
     });
 
@@ -515,6 +598,38 @@ io.on('connection', (socket: Socket) => {
         }
     });
 
+    socket.on('leaveRoom', ({ roomCode }: { roomCode: string }) => {
+        const room = rooms.get(roomCode);
+        if (!room) return;
+
+        const player = room.players.find(p => p.id === socket.id);
+        if (!player) return;
+
+        room.players = room.players.filter(p => p.id !== socket.id);
+        playerRoomMap.delete(socket.id);
+
+        // Notify everyone in the room that the player has left
+        socket.to(roomCode).emit('playerLeft', { playerName: player.name });
+        socket.leave(roomCode);
+        socket.leave(`${roomCode}-guessed`);
+
+        if (room.players.length === 0) {
+            rooms.delete(roomCode);
+            return;
+        }
+
+        if (player.isHost) {
+            room.host = room.players[0].id;
+            room.players[0].isHost = true;
+        }
+
+        io.to(roomCode).emit('playersUpdated', room.players);
+
+        if (room.status === 'inGame' && room.currentDrawer === socket.id) {
+            endRound(roomCode);
+        }
+    });
+
     // handle player disconnect
     socket.on('disconnect', () => {
         console.log('player left:', socket.id);
@@ -531,7 +646,7 @@ io.on('connection', (socket: Socket) => {
         
         room.players = room.players.filter(p => p.id !== socket.id);
         playerRoomMap.delete(socket.id);
-        socket.to(roomCode).emit('playerLeft', { playerId: socket.id });
+        socket.to(roomCode).emit('playerLeft', { playerName: player.name });
 
         if (room.players.length === 0) {    
             rooms.delete(roomCode);

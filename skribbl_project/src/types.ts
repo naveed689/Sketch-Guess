@@ -43,6 +43,8 @@ export interface Room {
 
     settings: RoomSettings;
     correctGuessers: CorrectGuesser[];
+
+    strokes: CanvasAction[];
 }
 
 export interface DrawData {
@@ -110,4 +112,31 @@ export interface DrawingBoardProps {
     setScreen: React.Dispatch<React.SetStateAction<Screen>>;
 }
 
+export interface Reaction {
+    id: number;
+    emoji: string;
+    left: number;
+}
+
+export interface Points {  
+    x: number;
+    y: number;
+}
+
+export interface StrokeAction {
+    type: "stroke";
+    tool: string;
+    color: string;
+    size: number;
+    points: Points[];
+}
+
+export interface FillAction {
+    type: "fill";
+    x: number;
+    y: number;
+    color: string;
+}
+
+export type CanvasAction = StrokeAction | FillAction;
 

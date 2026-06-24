@@ -38,6 +38,10 @@ export interface Room {
 
     settings: RoomSettings;
     correctGuessers: CorrectGuesser[];
+
+    strokes: CanvasAction[];
+    currentStroke: StrokeAction | null;
+    redoStack: CanvasAction[];
 }
 
 export interface DrawData {
@@ -55,3 +59,25 @@ export interface FillData {
     y: number;
     color: string;
 }
+
+interface Points {  
+    x: number;
+    y: number;
+}
+
+interface StrokeAction {
+    type: "stroke";
+    tool: string;
+    color: string;
+    size: number;
+    points: Points[];
+}
+
+interface FillAction {
+    type: "fill";
+    x: number;
+    y: number;
+    color: string;
+}
+
+type CanvasAction = StrokeAction | FillAction;

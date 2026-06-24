@@ -257,7 +257,15 @@ const WaitingRoom = ({ socket, roomData, setRoomData, setScreen, playerName }: W
                             <div className="kick-name">You will be removed from the room.</div>
                             <div className="modal-btns">
                                 <button className="btn-cancel" onClick={() => setShowLeaveConfirm(false)}>✕ STAY</button>
-                                <button className="btn-kick-confirm" onClick={() => { socket.disconnect(); setScreen('lobby'); }}>▶ LEAVE</button>
+                                <button className="btn-kick-confirm" 
+                                    onClick={() => { 
+                                        // 1. Tell the server we are leaving
+                                        socket.emit('leaveRoom', { roomCode: roomData.code }); 
+                                        
+                                        // 2. Clear local state and go to lobby
+                                        setRoomData(null); 
+                                        setScreen('lobby'); 
+                                    }}>▶ LEAVE</button>
                             </div>
                         </motion.div>
                     </motion.div>

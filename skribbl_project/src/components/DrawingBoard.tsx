@@ -3,39 +3,10 @@ import { useRef, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Pen, Eraser, PaintBucket, Undo2, Redo2, Trash2 } from "lucide-react";
 
-import type { DrawData, DrawingBoardProps, FillData, Player } from "../types";
+import type { DrawData, DrawingBoardProps, FillData, Player, CanvasAction, Reaction, Points, StrokeAction, FillAction } from "../types";
 import Chat from "./Chat";
 import Leaderboard from "./Leaderboard";
 import "./drawingBoard.css";
-
-interface Reaction {
-    id: number;
-    emoji: string;
-    left: number;
-}
-
-interface Points {  
-    x: number;
-    y: number;
-}
-
-interface StrokeAction {
-    type: "stroke";
-    tool: string;
-    color: string;
-    size: number;
-    points: Points[];
-}
-
-interface FillAction {
-    type: "fill";
-    x: number;
-    y: number;
-    color: string;
-}
-
-type CanvasAction = StrokeAction | FillAction;
-
 
 const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }: DrawingBoardProps) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -48,7 +19,7 @@ const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }: DrawingBoard
     const roomDataRef = useRef(roomData);
 
     const [tool, setTool] = useState("pen");
-    const [color, setColor] = useState("black");
+    const [color, setColor] = useState("#000000");
     const [brushSize, setBrushSize] = useState(7);
     const [canUndo, setCanUndo] = useState(false);
     const [canRedo, setCanRedo] = useState(false);
@@ -62,7 +33,7 @@ const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }: DrawingBoard
     const presetColors = ["#000000","#ffffff","#ff0000","#ffa500","#ffff00","#00ff00","#0000ff","#800080","#8b4513","#ff69b4"];
 
     const [hasGuessed, setHasGuessed] = useState(false);
-    const [correctGuessers, setCorrectGuessers] = useState<Set<string>>(new Set());
+    const [correctGuessers, setCorrectGuessers] = useState<Set<string>>(roomData.correctGuessers ? new Set(roomData.correctGuessers.map(cg => roomData.players.find(p => p.id === cg.id)?.name).filter(Boolean) as string[])  : new Set());
     const isHost = roomData.players.find(p => p.id === socket.id)?.isHost || false;
 
     const [gamePhase, setGamePhase] = useState(roomData.gamePhase);
@@ -252,7 +223,8 @@ const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }: DrawingBoard
         return () => {
             ['drawStart','draw','drawEnd','fill','clear','undo','redo','chooseWord','yourWord',
              'drawingPhaseStarted','timerTick','roundEnded','nextRoundStarted','nextTurn',
-             'gameOver','correctGuesser','playersUpdated','reaction','kicked', 'backToLobby'].forEach(e => socket.off(e));
+             'gameOver','correctGuesser','playersUpdated','reaction','kicked', 'backToLobby', 
+             ].forEach(e => socket.off(e));
         };
     }, []);
 
@@ -262,13 +234,21 @@ const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }: DrawingBoard
         canvas.width = 800;
         canvas.height = 500;
 
-        const context = canvas.getContext("2d");
+        const context = canvas.getContext("2d", { willReadFrequently: true });
         if(!context) return;
         contextRef.current = context;
 
         context.lineWidth = brushSize;
         context.lineCap = "round";
         context.strokeStyle = color;
+        
+
+        // if (roomData.strokes.length > 0 && strokesRef.current.length === 0) {
+        //     console.log('replaying strokes', roomData.strokes.length);
+        //     console.log('roomData.strokes:', JSON.stringify(roomData.strokes));
+        //     strokesRef.current = roomData.strokes;
+        //     redraw();
+        // }
 
         const getTouchPos = (touch: Touch) => {
             const rect = canvas.getBoundingClientRect();
@@ -340,6 +320,27 @@ const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }: DrawingBoard
             canvas.removeEventListener("touchend", handleTouchEnd);
         };
     }, []);
+
+    useEffect(() => {
+        if (
+            contextRef.current && 
+            roomData?.strokes?.length > 0 && 
+            strokesRef.current.length === 0
+        ) {
+            console.log('Syncing strokes for mid-joiner:', roomData.strokes.length);
+            
+            // Copy the data so we don't mutate React state directly
+            strokesRef.current = [...roomData.strokes]; 
+            
+            // Wait for the browser to finish rendering the canvas
+            // before attempting to draw on it.
+            requestAnimationFrame(() => {
+                setTimeout(() => {
+                    redraw();
+                }, 50); // 50ms buffer guarantees the DOM is ready
+            });
+        }
+    }, [roomData?.strokes]);
 
     useEffect(() => {
         if (roomData.gamePhase === 'selecting' && roomData.wordChoices?.length > 0 && socket.id === roomData.currentDrawer) {
@@ -551,6 +552,9 @@ const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }: DrawingBoard
         if(!canvas) return;
         const context = contextRef.current;
         if (!context) return;
+        console.log('redraw called, strokes:', strokesRef.current.length);
+        console.log('canvas size:', canvas.width, canvas.height);
+        console.log('context valid:', !!context);
         context.clearRect(0, 0, canvas.width, canvas.height);
         for (const action of strokesRef.current) {
             if (action.type === "fill") floodFill(action.x, action.y, action.color);
@@ -561,13 +565,32 @@ const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }: DrawingBoard
     const drawStroke = (stroke: StrokeAction) => {
         const context = contextRef.current;
         if (!context) return;
+
+        if (!stroke.points || stroke.points.length === 0) {
+            console.warn("Skipped drawing empty stroke", stroke);
+            return; 
+        }
+
+        console.log('drawStroke called', stroke.points.length, 'points');
+        
         context.lineWidth = stroke.size;
         context.strokeStyle = stroke.color;
+        
+        // Add these so synced strokes look round and smooth like the live ones
+        context.lineCap = "round";  
+        context.lineJoin = "round"; 
+        
         context.globalCompositeOperation = stroke.tool === "eraser" ? "destination-out" : "source-over";
+        
         context.beginPath();
         context.moveTo(stroke.points[0].x, stroke.points[0].y);
-        for (let i = 1; i < stroke.points.length; i++) context.lineTo(stroke.points[i].x, stroke.points[i].y);
+        
+        for (let i = 1; i < stroke.points.length; i++) {
+            context.lineTo(stroke.points[i].x, stroke.points[i].y);
+        }
+        
         context.stroke();
+        context.globalCompositeOperation = "source-over";
     };
 
     const sendReaction = (emoji: string) => socket.emit('reaction', { roomCode: roomData.code, emoji });
@@ -866,7 +889,15 @@ const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }: DrawingBoard
                             <div className="kick-name">You will lose your progress.</div>
                             <div className="modal-btns">
                                 <button className="btn-cancel" onClick={() => setShowLeaveConfirm(false)}>✕ STAY</button>
-                                <button className="btn-kick-confirm" onClick={() => { socket.disconnect(); setRoomData(null); setScreen('lobby'); socket.connect(); }}>▶ LEAVE</button>
+                                <button className="btn-kick-confirm" 
+                                    onClick={() => { 
+                                        // 1. Tell the server we are leaving
+                                        socket.emit('leaveRoom', { roomCode: roomData.code }); 
+                                        
+                                        // 2. Clear local state and go to lobby
+                                        setRoomData(null); 
+                                        setScreen('lobby'); 
+                                    }}>▶ LEAVE</button>
                             </div>
                         </motion.div>
                     </motion.div>
