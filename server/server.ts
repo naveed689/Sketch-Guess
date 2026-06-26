@@ -613,6 +613,15 @@ io.on('connection', (socket: Socket) => {
         socket.leave(roomCode);
         socket.leave(`${roomCode}-guessed`);
 
+        if  (room.players.length === 1 && room.status === 'inGame') {
+            clearInterval(timers.get(roomCode));
+            timers.delete(roomCode);
+            room.gamePhase = 'gameOver';
+            io.to(roomCode).emit('gameOver', { players: room.players });
+            resetRoom(roomCode);
+            return;
+        }
+
         if (room.players.length === 0) {
             rooms.delete(roomCode);
             return;
@@ -621,6 +630,7 @@ io.on('connection', (socket: Socket) => {
         if (player.isHost) {
             room.host = room.players[0].id;
             room.players[0].isHost = true;
+            socket.to(roomCode).emit('newHost', { playerId: room.host });
         }
 
         io.to(roomCode).emit('playersUpdated', room.players);

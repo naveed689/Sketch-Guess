@@ -44,24 +44,48 @@
 }
 
 /* ─────────────────────────────────────────
-   TOP BAR  (timer + hint)
+   TOP BAR
 ───────────────────────────────────────── */
 .game-topbar {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border-bottom: 3px solid var(--border);
+  flex-shrink: 0;
+}
+
+/* ── Row 1: room code left, round+leave right ── */
+.topbar-row1 {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 10px 20px;
-  background: var(--surface);
-  border-bottom: 3px solid var(--border);
-  gap: 12px;
-  flex-shrink: 0;
 }
 
+/* ── Row 1 left cluster ── */
 .topbar-left {
   display: flex;
   align-items: center;
   gap: 10px;
-  min-width: 90px;
+}
+
+/* ── Row 1 right cluster ── */
+.round-tag {
+  display: flex;
+  align-items: center;
+  font-size: 8px;
+  color: var(--muted);
+  letter-spacing: 2px;
+}
+
+/* ── Row 2: timer + word hint ── */
+.hint-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 8px 20px 10px;
+  border-top: 1px solid var(--border-dim);
 }
 
 .overlay-toggle-btn {
@@ -79,6 +103,46 @@
 
 .overlay-toggle-btn:hover {
   background: rgba(245,197,24,0.1);
+}
+
+/* ── Room code box ── */
+.room-code-box {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 2px solid var(--border-dim);
+  padding: 4px 8px;
+}
+
+.room-code-label {
+  font-family: var(--pixel);
+  font-size: 8px;
+  color: var(--accent);
+  letter-spacing: 2px;
+}
+
+.room-code-copy-btn {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font-size: 13px;
+  cursor: pointer;
+  padding: 0 2px;
+  line-height: 1;
+  transition: color 0.15s;
+}
+
+.room-code-copy-btn:hover {
+  color: var(--accent);
+}
+
+/* ── Hint bar: timer + word — always on its own second row ── */
+
+
+.hint-word {
+  font-size: 13px;
+  letter-spacing: 8px;
+  color: var(--white);
 }
 
 .timer-box {
@@ -99,21 +163,6 @@
   50%       { opacity: 0.4; }
 }
 
-.hint-bar {
-  flex: 1;
-  text-align: center;
-  font-size: 13px;
-  letter-spacing: 8px;
-  color: var(--white);
-}
-
-.round-tag {
-  font-size: 8px;
-  color: var(--muted);
-  letter-spacing: 2px;
-  min-width: 90px;
-  text-align: right;
-}
 
 /* ─────────────────────────────────────────
    MAIN LAYOUT  (3 columns)
@@ -140,13 +189,21 @@
   overflow-y: auto;
 }
 
-.leaderboard-panel .panel-title {
-  font-size: 8px;
+.leaderboard-panel .panel-title,
+.chat-panel .panel-title,
+.offcanvas-lb .panel-title,
+.offcanvas-chat .panel-title {
   color: var(--accent);
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+  z-index: 1;
+  font-size: 8px;
   letter-spacing: 3px;
-  border-bottom: 2px solid var(--border-dim);
-  padding-bottom: 10px;
   text-align: center;
+  margin: 0;
+  padding: 12px 14px;
+  border-bottom: 2px solid var(--border-dim);
 }
 
 .lb-card {
@@ -188,6 +245,21 @@
 .lb-score {
   font-size: 8px;
   color: var(--accent);
+}
+
+.lb-you-tag {
+  font-size: 6px;
+  color: #0d0d1a;
+  background: #f5c518;
+  padding: 2px 5px;
+  letter-spacing: 1px;
+  flex-shrink: 0;
+}
+
+.lb-drawer-tag {
+  color: var(--accent);
+  font-size: 12px;
+  flex-shrink: 0;
 }
 
 .lb-kick-btn {
@@ -409,22 +481,13 @@
   flex-direction: column;
 }
 
-.chat-panel .panel-title {
-  font-size: 8px;
-  color: var(--accent);
-  letter-spacing: 3px;
-  padding: 12px 14px 10px;
-  border-bottom: 2px solid var(--border-dim);
-  text-align: center;
-}
-
 .chat-messages {
   flex: 1;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 10px 10px;
+  gap: 8px;
+  padding: 12px 14px;
   scrollbar-width: thin;
   scrollbar-color: var(--border-dim) transparent;
 }
@@ -508,6 +571,19 @@
 
 .chat-send-btn:hover {
   background: var(--white);
+}
+
+/* ── Chat character bar ── */
+.chat-char-bar {
+  height: 3px;
+  width: 100%;
+  background: var(--border-dim);
+  flex-shrink: 0;
+}
+
+.chat-char-fill {
+  height: 100%;
+  transition: width 0.1s, background 0.2s;
 }
 
 /* ─────────────────────────────────────────
@@ -798,6 +874,27 @@
 }
 
 /* ─────────────────────────────────────────
+   LEAVE BUTTON
+───────────────────────────────────────── */
+.leave-btn {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7px;
+  background: transparent;
+  color: var(--red);
+  border: 2px solid var(--red);
+  padding: 5px 8px;
+  cursor: pointer;
+  letter-spacing: 1px;
+  margin-left: 12px;
+  transition: background 0.15s, color 0.15s;
+}
+
+.leave-btn:hover {
+  background: var(--red);
+  color: var(--bg);
+}
+
+/* ─────────────────────────────────────────
    RESPONSIVE
 ───────────────────────────────────────── */
 
@@ -812,53 +909,55 @@
   .chat-panel { display: none; }
   .overlay-toggle-btn.chat-btn { display: inline-flex; }
 
-  /* Topbar: two rows on mobile */
-  .game-topbar {
-    flex-wrap: wrap;
+  /* Topbar row 1: tighten padding on mobile */
+  .topbar-row1 {
     padding: 8px 10px;
-    gap: 6px;
   }
 
   .topbar-left {
-    flex: 0 0 auto;
     gap: 6px;
   }
 
   .round-tag {
-    flex: 0 0 auto;
-    min-width: unset;
+    gap: 6px;
     font-size: 7px;
   }
 
-  /* hint bar drops to its own full-width row */
+  /* Room code on mobile: smaller text */
+  .room-code-label {
+    font-size: 7px;
+  }
+
+  /* hint bar: tighten on mobile */
   .hint-bar {
-    order: 10;
-    flex: 0 0 100%;
+    gap: 10px;
+    padding: 6px 10px 8px;
+  }
+
+  .hint-word {
     font-size: 10px;
-    letter-spacing: 3px;
-    text-align: center;
-    padding: 4px 0;
-    border-top: 1px solid var(--border-dim);
+    letter-spacing: 4px;
   }
 
   .timer-box {
     font-size: 11px;
   }
 
-  /* Toolbar: wrap to two rows, color/brush on second row */
+  /* Toolbar: wrap to two rows */
   .db-controls {
     flex-wrap: wrap;
     gap: 8px;
     padding: 8px 10px;
   }
 
-  .db-tool-group {
+  .db-tool-group:nth-child(1),
+  .db-tool-group:nth-child(2) {
     flex-shrink: 0;
   }
 
-  /* Color picker group goes to second row */
-  .db-tool-group:last-child {
-    flex: 0 0 100%;
+  /* Color picker group goes to row 2 */
+  .db-tool-group:nth-child(3) {
+    width: 100%;
     border-left: none;
     padding-left: 0;
     margin-left: 0;
@@ -866,20 +965,25 @@
     padding-top: 8px;
   }
 
-  /* Palette popup opens upward and stays on screen */
-  .db-palette-popup {
-    left: 0;
-    transform: none;
-    bottom: calc(100% + 8px);
+  .db-color-picker-wrap {
+    width: 100%;
+    justify-content: flex-start;
+    gap: 12px;
   }
 
   .db-brush-slider {
     flex: 1;
     width: auto;
-    max-width: 200px;
   }
 
-  /* Non-drawer phone: split canvas top / chat bottom */
+  /* Palette popup opens upward */
+  .db-palette-popup {
+    bottom: calc(100% + 8px);
+    left: 0;
+    transform: none;
+  }
+
+  /* Non-drawer phone: canvas top / chat bottom */
   .game-body.non-drawer-phone {
     flex-direction: column;
   }
@@ -902,144 +1006,8 @@
     flex: 1;
     padding: 4px;
   }
-}
 
-/* ── YOU tag and drawer indicator ── */
-.lb-you-tag {
-  font-size: 6px;
-  color: #0d0d1a;
-  background: #f5c518;
-  padding: 2px 5px;
-  letter-spacing: 1px;
-  flex-shrink: 0;
-}
-
-.lb-drawer-tag {
-  font-size: 10px;
-  flex-shrink: 0;
-}
-
-/* ── Leave button (topbar) ── */
-.leave-btn {
-  font-family: 'Press Start 2P', monospace;
-  font-size: 7px;
-  background: transparent;
-  color: #ff4d4d;
-  border: 2px solid #ff4d4d;
-  padding: 5px 8px;
-  cursor: pointer;
-  letter-spacing: 1px;
-  margin-left: 12px;
-  transition: background 0.15s, color 0.15s;
-}
-
-.leave-btn:hover {
-  background: #ff4d4d;
-  color: #0d0d1a;
-}
-
-.round-tag {
-  display: flex;
-  align-items: center;
-  gap: 0;
-  font-size: 8px;
-  color: var(--muted);
-  letter-spacing: 2px;
-  justify-content: flex-end;
-}
-
-/* ── Mobile topbar: two rows ── */
-@media (max-width: 600px) {
-  .game-topbar {
-    flex-wrap: wrap;
-    padding: 8px 10px 0;
-    gap: 0;
-  }
-
-  .topbar-left {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .round-tag {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    justify-content: flex-end;
-    font-size: 7px;
-  }
-
-  /* hint moves to second row, full width */
-  .hint-bar {
-    order: 3;
-    width: 100%;
-    font-size: 11px;
-    letter-spacing: 5px;
-    text-align: center;
-    padding: 6px 0 8px;
-    border-top: 1px solid var(--border-dim);
-    margin-top: 6px;
-  }
-
-  /* ── Toolbar: two rows on mobile ── */
-  .db-controls {
-    flex-wrap: wrap;
-    gap: 8px;
-    padding: 8px 10px;
-  }
-
-  /* tools + edit stay on row 1 */
-  .db-tool-group:nth-child(1),
-  .db-tool-group:nth-child(2) {
-    flex-shrink: 0;
-  }
-
-  /* color picker group goes to row 2, full width */
-  .db-tool-group:nth-child(3) {
-    width: 100%;
-    border-left: none;
-    padding-left: 0;
-    margin-left: 0;
-    border-top: 2px solid var(--border-dim);
-    padding-top: 8px;
-  }
-
-  .db-color-picker-wrap {
-    width: 100%;
-    justify-content: flex-start;
-    gap: 12px;
-  }
-
-  .db-brush-slider {
-    flex: 1;
-    width: auto;
-  }
-
-  /* palette popup opens upward, centered */
-  .db-palette-popup {
-    bottom: calc(100% + 8px);
-    left: 0;
-    transform: none;
-  }
-}
-
-/* ── Chat character bar ── */
-.chat-char-bar {
-  height: 3px;
-  width: 100%;
-  background: var(--border-dim);
-  flex-shrink: 0;
-}
-
-.chat-char-fill {
-  height: 100%;
-  transition: width 0.1s, background 0.2s;
-}
-
-/* ── Chat input mobile ── */
-@media (max-width: 600px) {
+  /* Chat input larger touch targets on mobile */
   .chat-input {
     font-size: 11px;
     padding: 14px 12px;
@@ -1050,70 +1018,4 @@
     padding: 0 16px;
     min-width: 52px;
   }
-}
-
-/* ── Leaderboard & Chat title visibility fix ── */
-.leaderboard-panel .panel-title,
-.chat-panel .panel-title,
-.offcanvas-lb .panel-title,
-.offcanvas-chat .panel-title {
-  color: #f5c518;
-  position: sticky;
-  top: 0;
-  background: var(--surface);
-  z-index: 1;
-  padding: 12px 14px;
-  margin: -16px -12px 0;
-}
-
-/* Chat panel padding */
-.chat-messages {
-  padding: 10px 12px;
-}
-
-/* Drawer icon lighter color */
-.lb-drawer-tag {
-  color: #f5c518;
-  font-size: 12px;
-}
-
-/* ── Leaderboard & Chat title visibility fix ── */
-.leaderboard-panel .panel-title,
-.chat-panel .panel-title,
-.offcanvas-lb .panel-title,
-.offcanvas-chat .panel-title {
-  color: #f5c518;
-  position: sticky;
-  top: 0;
-  background: var(--surface);
-  z-index: 1;
-  padding: 12px 14px;
-  margin: -16px -12px 0;
-}
-
-/* ── Drawer icon visibility ── */
-.lb-drawer-tag {
-  color: #f5c518;
-  font-size: 12px;
-}
-
-/* ── Chat panel padding ── */
-.chat-messages {
-  padding: 12px 14px;
-  gap: 8px;
-}
-
-.chat-panel .panel-title {
-  margin: 0;
-  padding: 12px 14px;
-}
-
-/* ── Fix panel title overflow ── */
-.leaderboard-panel .panel-title,
-.chat-panel .panel-title,
-.offcanvas-lb .panel-title,
-.offcanvas-chat .panel-title {
-  margin: 0;
-  padding: 12px 14px;
-  border-bottom: 2px solid var(--border-dim);
 }

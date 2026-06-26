@@ -2,6 +2,8 @@ import React from "react";
 import { useRef, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Pen, Eraser, PaintBucket, Undo2, Redo2, Trash2 } from "lucide-react";
+import useToast from "../hooks/useToast";
+import Toast from "./Toast";
 
 import type { DrawData, DrawingBoardProps, FillData, Player, CanvasAction, Reaction, Points, StrokeAction, FillAction } from "../types";
 import Chat from "./Chat";
@@ -29,8 +31,9 @@ const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }: DrawingBoard
     const colorRef = useRef(color);
     const brushSizeRef = useRef(brushSize);
     const toolRef = useRef(tool);
-
     const presetColors = ["#000000","#ffffff","#ff0000","#ffa500","#ffff00","#00ff00","#0000ff","#800080","#8b4513","#ff69b4"];
+
+    const { toasts, addToast } = useToast(); // custom hook for managing toasts
 
     const [hasGuessed, setHasGuessed] = useState(false);
     const [correctGuessers, setCorrectGuessers] = useState<Set<string>>(roomData.correctGuessers ? new Set(roomData.correctGuessers.map(cg => roomData.players.find(p => p.id === cg.id)?.name).filter(Boolean) as string[])  : new Set());
@@ -220,10 +223,24 @@ const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }: DrawingBoard
             setScreen('waiting');
         });
 
+        socket.on('playerLeft', ({ playerName }) => {
+            addToast(`${playerName} left the game`, "leave");
+        });
+
+        socket.on('newHost', ({ playerId }) => {
+            const newHost = roomDataRef.current.players.find(p => p.id === playerId);
+            if (playerId === socket.id) {
+                addToast("You are the new host", "host");
+            } else {
+                addToast(`${newHost?.name ?? "Someone"} is the new host`, "host");
+            }
+        });
+
         return () => {
             ['drawStart','draw','drawEnd','fill','clear','undo','redo','chooseWord','yourWord',
              'drawingPhaseStarted','timerTick','roundEnded','nextRoundStarted','nextTurn',
              'gameOver','correctGuesser','playersUpdated','reaction','kicked', 'backToLobby', 
+             'playerLeft','newHost'
              ].forEach(e => socket.off(e));
         };
     }, []);
@@ -631,24 +648,44 @@ const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }: DrawingBoard
 
             {/* TOP BAR */}
             <div className="game-topbar">
-                <div className="topbar-left">
-                    <button className="overlay-toggle-btn lb-btn" onClick={() => setShowLbOffcanvas(true)}>☰ LB</button>
-                    <button className="overlay-toggle-btn chat-btn" onClick={() => setShowChatOffcanvas(true)}>☰ CHAT</button>
-                    <div className={`timer-box ${timeLeft <= 10 ? 'timer-low' : ''}`}>{timeLeft}s</div>
+
+                {/* ── ROW 1 ── */}
+                <div className="topbar-row1">
+                    <div className="topbar-left">
+                        <button className="overlay-toggle-btn lb-btn" onClick={() => setShowLbOffcanvas(true)}>☰ LB</button>
+                        <button className="overlay-toggle-btn chat-btn" onClick={() => setShowChatOffcanvas(true)}>☰ CHAT</button>
+                        <div className="room-code-box">
+                            <span className="room-code-label">{roomData.code}</span>
+                            <button
+                                className="room-code-copy-btn"
+                                onClick={() => {
+                                    navigator.clipboard.writeText(roomData.code);
+                                    addToast(`Room code ${roomData.code} copied!`, "info");
+                                }}
+                                title="Copy room code"
+                            >
+                                ⧉
+                            </button>
+                        </div>
+                    </div>
+                    <div className="round-tag">
+                        RND {round}/{roomData.settings.rounds}
+                        <button className="leave-btn" onClick={() => setShowLeaveConfirm(true)}>✕ LEAVE</button>
+                    </div>
                 </div>
 
+                {/* ── ROW 2 ── */}
                 <div className="hint-bar">
-                    {gamePhase === 'drawing'
-                        ? (isDrawer ? currentWord : wordHint)
-                        : gamePhase === 'selecting'
-                        ? '? ? ?'
-                        : '— — —'}
+                    <span className={`timer-box ${timeLeft <= 10 ? 'timer-low' : ''}`}>{timeLeft}s</span>
+                    <span className="hint-word">
+                        {gamePhase === 'drawing'
+                            ? (isDrawer ? currentWord : wordHint)
+                            : gamePhase === 'selecting'
+                            ? '? ? ?'
+                            : '— — —'}
+                    </span>
                 </div>
 
-                <div className="round-tag">
-                    RND {round}/{roomData.settings.rounds}
-                    <button className="leave-btn" onClick={() => setShowLeaveConfirm(true)}>✕ LEAVE</button>
-                </div>
             </div>
 
             {/* MAIN BODY */}
@@ -903,6 +940,8 @@ const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }: DrawingBoard
                     </motion.div>
                 )}
             </AnimatePresence>
+            {/* Toast Notifications */}
+            <Toast toasts={toasts} />
         </div>
     );
 };
