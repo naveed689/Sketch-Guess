@@ -153,6 +153,7 @@ const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }: DrawingBoard
             setRoomData(prev => prev ? ({ ...prev, players }) : prev);
             setCorrectWord(currentWord);
             setGamePhase('roundEnd');
+            setColor("#000000");
         });
 
         socket.on('nextRoundStarted', ({ currentDrawer, round }) => {
@@ -260,13 +261,6 @@ const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }: DrawingBoard
         context.strokeStyle = color;
         
 
-        // if (roomData.strokes.length > 0 && strokesRef.current.length === 0) {
-        //     console.log('replaying strokes', roomData.strokes.length);
-        //     console.log('roomData.strokes:', JSON.stringify(roomData.strokes));
-        //     strokesRef.current = roomData.strokes;
-        //     redraw();
-        // }
-
         const getTouchPos = (touch: Touch) => {
             const rect = canvas.getBoundingClientRect();
             const scaleX = canvas.width / rect.width;
@@ -283,6 +277,17 @@ const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }: DrawingBoard
             if (!contextRef.current) return;
             const { x, y } = getTouchPos(e.touches[0]);
             const ctx = contextRef.current;
+
+            console.log('tool:', toolRef.current)
+            if(toolRef.current === "fill") {
+                floodFill(x, y);
+                strokesRef.current.push({ type: "fill", x, y, color: colorRef.current } as FillAction);
+                socket.emit('fill', { x, y, color: colorRef.current, roomCode: roomDataRef.current.code } as FillData);
+                redoRef.current = [];
+                updateHistoryState();
+                return;
+            }
+
             currentStrokeRef.current = { type: "stroke", tool: toolRef.current, color: colorRef.current, size: brushSizeRef.current, points: [] };
             ctx.beginPath();
             ctx.moveTo(x, y);
@@ -423,7 +428,7 @@ const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }: DrawingBoard
 
         if (tool === "fill") {
             floodFill(x, y);
-            strokesRef.current.push({ type: "fill", x, y, color });
+            strokesRef.current.push({ type: "fill", x, y, color } as FillAction);
             socket.emit('fill', { x, y, color: colorRef.current, roomCode: roomData.code } as FillData);
             redoRef.current = [];
             updateHistoryState();
@@ -508,7 +513,7 @@ const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }: DrawingBoard
         updateHistoryState();
     };
 
-    const floodFill = (startX: number, startY: number, fillCol: string = color) => {
+    const floodFill = (startX: number, startY: number, fillCol: string = colorRef.current) => {
         if(canvasRef.current === null || contextRef.current === null) return;
         const canvas = canvasRef.current;
         const ctx = contextRef.current;

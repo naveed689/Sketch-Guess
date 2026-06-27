@@ -83,7 +83,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 16px;
+  gap: 32px;
   padding: 8px 20px 10px;
   border-top: 1px solid var(--border-dim);
 }
@@ -911,27 +911,52 @@
 
   /* Topbar row 1: tighten padding on mobile */
   .topbar-row1 {
-    padding: 8px 10px;
+    padding: 6px 8px;
   }
 
   .topbar-left {
-    gap: 6px;
+    gap: 5px;
   }
 
-  .round-tag {
-    gap: 6px;
+  /* Shrink the toggle buttons */
+  .overlay-toggle-btn {
     font-size: 7px;
+    padding: 5px 6px;
   }
 
-  /* Room code on mobile: smaller text */
+  /* Shrink room code box */
+  .room-code-box {
+    padding: 3px 6px;
+    gap: 4px;
+  }
+
   .room-code-label {
     font-size: 7px;
+    letter-spacing: 1px;
   }
 
-  /* hint bar: tighten on mobile */
+  .room-code-copy-btn {
+    font-size: 11px;
+  }
+
+  /* Hide "RND x/y" text on mobile — keep only LEAVE */
+  .round-tag {
+    font-size: 0; /* hides the RND x/y text node */
+    gap: 0;
+  }
+
+  /* LEAVE button stays visible */
+  .leave-btn {
+    font-size: 7px;
+    padding: 5px 6px;
+    margin-left: 0;
+    letter-spacing: 0;
+  }
+
+  /* hint bar row 2 */
   .hint-bar {
     gap: 10px;
-    padding: 6px 10px 8px;
+    padding: 5px 10px 7px;
   }
 
   .hint-word {
@@ -941,6 +966,7 @@
 
   .timer-box {
     font-size: 11px;
+    min-width: 36px;
   }
 
   /* Toolbar: wrap to two rows */
