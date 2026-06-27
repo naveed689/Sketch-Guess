@@ -1,11 +1,11 @@
 import { AnimatePresence, motion } from "framer-motion";
-import type { Toast } from "../hooks/useToast";
+import type { ToastItem } from "../hooks/useToast";
 
 interface ToastProps {
-    toasts: Toast[];
+    toasts: ToastItem[];
 }
 
-const toastColors: Record<Toast["type"], string> = {
+const toastColors: Record<ToastItem["type"], string> = {
     leave: "#ff4d4d",
     host:  "#f5c518",
     info:  "#ffffff",

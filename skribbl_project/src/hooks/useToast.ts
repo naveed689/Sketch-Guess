@@ -2,14 +2,14 @@ import { useState } from "react";
 
 export type ToastType = "leave" | "host" | "info";
 
-export interface Toast {
+export interface ToastItem {
     id: number;
     message: string;
     type: ToastType;
 }
 
 const useToast = () => {
-    const [toasts, setToasts] = useState<Toast[]>([]);
+    const [toasts, setToasts] = useState<ToastItem[]>([]);
 
     const addToast = (message: string, type: ToastType = "info") => {
         const id = Date.now();
