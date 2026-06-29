@@ -158,6 +158,9 @@ function resetRoom(roomCode: string): void {
         room.wordChoices = [];
         room.round = 1;
         room.correctGuessers = [];
+        room.strokes = [];
+        room.redoStack = [];
+        room.currentStroke = null;
 
         io.to(roomCode).emit('backToLobby', { players: room.players });
     }, 5000); // 5 second delay so players can see final scores

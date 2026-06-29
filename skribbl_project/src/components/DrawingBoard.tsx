@@ -154,7 +154,6 @@ const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }: DrawingBoard
             setRoomData(prev => prev ? ({ ...prev, players }) : prev);
             setCorrectWord(currentWord);
             setGamePhase('roundEnd');
-            setColor("#000000");
         });
 
         socket.on('nextRoundStarted', ({ currentDrawer, round }) => {
@@ -511,6 +510,13 @@ const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }: DrawingBoard
         context.clearRect(0, 0, canvas.width, canvas.height);
         strokesRef.current = []; redoRef.current = [];
         currentStrokeRef.current = null; isDrawingRef.current = false;
+        context.strokeStyle = "#000000";
+        context.globalCompositeOperation = "source-over";
+        context.lineWidth = 7; // default brush size
+
+        setColor("#000000");
+        setBrushSize(7);
+        setTool("pen");
         updateHistoryState();
     };
 
