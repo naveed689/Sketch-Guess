@@ -29,7 +29,7 @@ export interface Room {
     host: string;
 
     currentWord: string | null;
-    currentDrawer: string | null;
+    currentDrawer: string | null; // stores id of drawer
     wordChoices: string[];
     wordHint: string;
 
@@ -82,6 +82,8 @@ export interface ChatProps {
     setHasGuessed: React.Dispatch<React.SetStateAction<boolean>>;
     gamePhase: GamePhase;
     wordHint: string | null;
+    chatMessages: ChatMessage[];
+    setChatMessages: React.Dispatch<React.SetStateAction<ChatMessage[]>>;
 }
 
 export interface ChatMessage {

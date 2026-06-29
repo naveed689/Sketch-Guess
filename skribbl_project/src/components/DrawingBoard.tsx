@@ -5,7 +5,7 @@ import { Pen, Eraser, PaintBucket, Undo2, Redo2, Trash2 } from "lucide-react";
 import useToast from "../hooks/useToast";
 import Toast from "./Toast";
 
-import type { DrawData, DrawingBoardProps, FillData, Player, CanvasAction, Reaction, Points, StrokeAction, FillAction } from "../types";
+import type { DrawData, DrawingBoardProps, FillData, Player, CanvasAction, Reaction, Points, StrokeAction, FillAction, ChatMessage } from "../types";
 import Chat from "./Chat";
 import Leaderboard from "./Leaderboard";
 import "./drawingBoard.css";
@@ -49,6 +49,7 @@ const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }: DrawingBoard
     const [pointsGained, setPointsGained] = useState(new Map());
     const [timeLeft, setTimeLeft] = useState(roomData.settings.drawTime);
     const [reactions, setReactions] = useState<Reaction[]>([]);
+    const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
 
     // responsive offcanvas state
     const [showLbOffcanvas, setShowLbOffcanvas] = useState(false);
@@ -658,7 +659,7 @@ const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }: DrawingBoard
                 <div className="topbar-row1">
                     <div className="topbar-left">
                         <button className="overlay-toggle-btn lb-btn" onClick={() => setShowLbOffcanvas(true)}>☰ LB</button>
-                        <button className="overlay-toggle-btn chat-btn" onClick={() => setShowChatOffcanvas(true)}>☰ CHAT</button>
+                        {isDrawer && <button className="overlay-toggle-btn chat-btn" onClick={() => setShowChatOffcanvas(true)}>☰ CHAT</button>}
                         <div className="room-code-box">
                             <span className="room-code-label">{roomData.code}</span>
                             <button
@@ -791,6 +792,8 @@ const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }: DrawingBoard
                         gamePhase={gamePhase}
                         hasGuessed={hasGuessed}
                         setHasGuessed={setHasGuessed}
+                        chatMessages={chatMessages}
+                        setChatMessages={setChatMessages}
                     />
                 </div>
             </div>
@@ -821,6 +824,8 @@ const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }: DrawingBoard
                                 gamePhase={gamePhase}
                                 hasGuessed={hasGuessed}
                                 setHasGuessed={setHasGuessed}
+                                chatMessages={chatMessages}
+                                setChatMessages={setChatMessages}
                             />
                         </motion.div>
                     </>

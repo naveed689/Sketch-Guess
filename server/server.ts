@@ -507,7 +507,7 @@ io.on('connection', (socket: Socket) => {
 
         if(!player) return; // player not found in room, ignore
 
-        socket.to(`${roomCode}-guessed`).emit('chatMessageRecieve', {
+        io.to(`${roomCode}-guessed`).emit('chatMessageRecieve', {
             playerName: player.name,
             message,
             type: 'guessed'
@@ -520,6 +520,10 @@ io.on('connection', (socket: Socket) => {
         const room = rooms.get(roomCode);
         if(!room) return; // room not found, ignore
         if (room.correctGuessers.find(g => g.id === socket.id)) return; // player already guessed correctly this round
+
+        if(room.currentWord === null) return; // no word to guess, ignore
+        if(room.gamePhase !== 'drawing') return; // not in drawing phase, ignore
+        if(room.currentDrawer === socket.id) return; // drawer cannot guess, ignore
 
         const correctWord = room.currentWord!.toLowerCase().trim();
         const normalizedGuess = guess.toLowerCase().trim();
@@ -545,6 +549,14 @@ io.on('connection', (socket: Socket) => {
                 endRound(roomCode);
             }
         } else {
+            // Broadcast the guess as a normal chat message to everyone
+            io.to(roomCode).emit('chatMessageRecieve', { 
+                message: guess, 
+                playerName: player.name, 
+                type: 'normal' 
+            });
+
+            // Check if the guess is close to the correct word using Levenshtein distance
             const distance = levenshtein(normalizedGuess, correctWord);
             if (distance <= 2) {
                 socket.emit('soClose');  // only to the guesser

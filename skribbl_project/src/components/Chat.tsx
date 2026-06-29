@@ -1,22 +1,23 @@
 import { useState, useEffect, useRef } from "react";
 import { type ChatMessage, type ChatProps } from "../types";
 
-const Chat = ({ socket, roomData, playerName, wordHint, gamePhase, hasGuessed, setHasGuessed }: ChatProps) => {
+const Chat = ({ socket, roomData, playerName, wordHint, gamePhase, hasGuessed, setHasGuessed, chatMessages, setChatMessages }: ChatProps) => {
     const [message, setMessage] = useState("");
-    const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
     const chatContainerRef = useRef<HTMLDivElement | null>(null);
     const isFirstRender = useRef(true);
-    const hintWordLength = wordHint ? wordHint.split(' ').length : 0;
+    const MAX_LENGTH = 100;
 
     useEffect(() => {
-        socket.on('chatMessageRecieve', (data) => {
+        // Named handlers defined inside useEffect so the same reference
+        // is used for both socket.on and socket.off
+        const onChatMessageRecieve = (data: ChatMessage) => {
             setChatMessages(prev => {
                 const updated = [...prev, data];
                 return updated.length > 50 ? updated.slice(-50) : updated;
             });
-        });
+        };
 
-        socket.on('correctGuessResult', ({ word }) => {
+        const onCorrectGuessResult = ({ word }: { word: string }) => {
             setHasGuessed(true);
             setChatMessages(prev => {
                 const updated = [...prev, {
@@ -26,27 +27,34 @@ const Chat = ({ socket, roomData, playerName, wordHint, gamePhase, hasGuessed, s
                 }];
                 return updated.length > 50 ? updated.slice(-50) : updated;
             });
-        });
+        };
 
-        socket.on('correctGuesser', ({ playerName: guesser }) => {
+        const onCorrectGuesser = ({ playerName: guesser }: { playerName: string }) => {
             setChatMessages(prev => {
                 const updated = [...prev, { playerName: 'Game', message: `${guesser} guessed the word!`, type: 'game' as const }];
                 return updated.length > 50 ? updated.slice(-50) : updated;
             });
-        });
+        };
 
-        socket.on('soClose', () => {
+        const onSoClose = () => {
             setChatMessages(prev => {
                 const updated = [...prev, { playerName: 'Game', message: "So close! Keep trying!", type: 'game' as const }];
                 return updated.length > 50 ? updated.slice(-50) : updated;
             });
-        });
+        };
+
+        socket.on('chatMessageRecieve', onChatMessageRecieve);
+        socket.on('correctGuessResult', onCorrectGuessResult);
+        socket.on('correctGuesser', onCorrectGuesser);
+        socket.on('soClose', onSoClose);
 
         return () => {
-            socket.off('chatMessageRecieve');
-            socket.off('correctGuessResult');
-            socket.off('correctGuesser');
-            socket.off('soClose');
+            // Pass the exact same reference so only THIS handler is removed,
+            // not all listeners for the event (which would kill sibling Chat instances)
+            socket.off('chatMessageRecieve', onChatMessageRecieve);
+            socket.off('correctGuessResult', onCorrectGuessResult);
+            socket.off('correctGuesser', onCorrectGuesser);
+            socket.off('soClose', onSoClose);
         };
     }, [socket]);
 
@@ -57,31 +65,21 @@ const Chat = ({ socket, roomData, playerName, wordHint, gamePhase, hasGuessed, s
         }
     }, [chatMessages]);
 
-    const MAX_LENGTH = 100;
-
     const sendMessage = () => {
         if (!message) return;
-        if (!hasGuessed
-            && gamePhase === 'drawing'
-            && wordHint
-            && message.length >= hintWordLength - 1
-            && message.length <= hintWordLength + 1) {
+
+        if(roomData.currentDrawer === socket.id) {
+            // Drawer cannot guess, only chat
+            socket.emit('guessedChat', { message, roomCode: roomData.code });
+        } else if (!hasGuessed) {
+            // Server decide if it's a valid guess
+            // Server checks room.currentWord, room.gamePhase, and correctGuessers
             socket.emit('submitGuess', { guess: message, roomCode: roomData.code });
-            setChatMessages(prev => {
-                const updated = [...prev, { playerName, message, type: 'normal' as const }];
-                return updated.length > 50 ? updated.slice(-50) : updated;
-            });
         } else {
-            if (hasGuessed) {
-                socket.emit('guessedChat', { message, roomCode: roomData.code });
-            } else {
-                socket.emit('chatMessage', { message, roomCode: roomData.code });
-            }
-            setChatMessages(prev => {
-                const updated = [...prev, { playerName, message, type: hasGuessed ? 'guessed' : 'normal' } as ChatMessage];
-                return updated.length > 50 ? updated.slice(-50) : updated;
-            });
+            // Already guessed correctly — send to guessed channel
+            socket.emit('guessedChat', { message, roomCode: roomData.code });
         }
+
         setMessage("");
     };
 
@@ -123,17 +121,17 @@ const Chat = ({ socket, roomData, playerName, wordHint, gamePhase, hasGuessed, s
                 />
                 <button className="chat-send-btn" onClick={sendMessage}>▶</button>
             </div>
-            {message.length > 0 && (
-                <div className="chat-char-bar">
-                    <div
-                        className="chat-char-fill"
-                        style={{
-                            width: `${(message.length / MAX_LENGTH) * 100}%`,
-                            background: message.length > 80 ? '#ff4d4d' : '#f5c518'
-                        }}
-                    />
-                </div>
-            )}
+
+             {/* Character count bar */}
+            <div className="chat-char-bar">
+                <div
+                    className="chat-char-fill"
+                    style={{
+                        width: `${(message.length / MAX_LENGTH) * 100}%`,
+                        background: message.length > 80 ? '#ff4d4d' : '#f5c518'
+                    }}
+                />
+            </div>
         </>
     );
 };

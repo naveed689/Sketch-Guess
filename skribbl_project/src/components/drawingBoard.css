@@ -479,6 +479,14 @@
   border-left: 3px solid var(--border-dim);
   display: flex;
   flex-direction: column;
+  overflow: hidden;  
+  height: 100%;      
+}
+
+.chat-panel .chat-messages {
+  min-height: 400px;
+  max-height: calc(100vh - 200px); /* accounts for topbar + input row */
+  overflow-y: auto;
 }
 
 .chat-messages {
@@ -865,7 +873,7 @@
   position: fixed;
   top: 0; right: 0;
   height: 100%;
-  width: 260px;
+  width: 200px;
   background: var(--surface);
   border-left: 3px solid var(--border);
   z-index: 160;
@@ -873,8 +881,20 @@
   flex-direction: column;
 }
 
+.offcanvas-chat .chat-messages {
+    max-height: calc(100vh - 120px); /* 120px accounts for panel title + input row + char bar */
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.offcanvas-chat .chat-messages::before {
+    content: '';
+    flex: 1;
+}
+
 /* ─────────────────────────────────────────
-   LEAVE BUTTON
+   LEAVE BUTTON 
 ───────────────────────────────────────── */
 .leave-btn {
   font-family: 'Press Start 2P', monospace;
@@ -902,6 +922,33 @@
 @media (max-width: 900px) {
   .leaderboard-panel { display: none; }
   .overlay-toggle-btn.lb-btn { display: inline-flex; }
+}
+
+@media (max-width: 750px) {
+  .db-controls {
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 8px 10px;
+  }
+
+  .db-tool-group:nth-child(3) {
+      width: 100%;
+      border-left: none;
+      padding-left: 0;
+      margin-left: 0;
+      border-top: 2px solid var(--border-dim);
+      padding-top: 8px;
+  }
+
+  .db-color-picker-wrap {
+      width: 100%;
+      gap: 12px;
+  }
+
+  .db-brush-slider {
+      flex: 1;
+      width: auto;
+  }
 }
 
 /* Phone: full responsive */
@@ -1027,6 +1074,12 @@
     border-top: 3px solid var(--border-dim);
   }
 
+  /* Fix chat messages overflow on mobile */
+  .game-body.non-drawer-phone .chat-messages {
+    max-height: calc(65vh * 0.65 - 80px); /* subtract input row height */
+    overflow-y: auto;
+  }
+
   /* Drawer phone: canvas fills everything */
   .game-body.drawer-phone .canvas-area {
     flex: 1;
@@ -1043,5 +1096,20 @@
     font-size: 11px;
     padding: 0 16px;
     min-width: 52px;
+  }
+
+ .offcanvas-chat {
+    width: 65vw;
+  }
+
+  .offcanvas-chat .chat-input {
+    font-size: 8px;
+    padding: 10px 8px;
+  }
+
+  .offcanvas-chat .chat-send-btn {
+    font-size: 8px;
+    padding: 0 10px;
+    min-width: 36px;
   }
 }
