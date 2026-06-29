@@ -1,6 +1,8 @@
 import { useRef, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { type Player, type Room, type RoomSettings, type WaitingRoomProps } from "../types";
+import { FaCog, FaCrown, FaUser } from "react-icons/fa";
+import { type Player, type Room, type RoomSettings, type WaitingRoomProps, type ChatMessage } from "../types";
+import Chat from "./Chat"; // Assuming Chat is in the same directory
 import "./waitingRoom.css";
 
 const WaitingRoom = ({ socket, roomData, setRoomData, setScreen, playerName }: WaitingRoomProps) => {
@@ -11,6 +13,11 @@ const WaitingRoom = ({ socket, roomData, setRoomData, setScreen, playerName }: W
     const [hoveredId, setHoveredId] = useState<string | null>(null);
     const [notEnoughError, setNotEnoughError] = useState<boolean>(false);
     const [showLeaveConfirm, setShowLeaveConfirm] = useState<boolean>(false);
+    
+    // UI specific states
+    const [showMobileSettings, setShowMobileSettings] = useState<boolean>(false);
+    const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+    const [hasGuessed, setHasGuessed] = useState<boolean>(false);
 
     const handleStartGame = () => {
         if (!isHost) return;
@@ -79,18 +86,6 @@ const WaitingRoom = ({ socket, roomData, setRoomData, setScreen, playerName }: W
         exit: { y: -60, opacity: 0, transition: { duration: 0.3 } }
     };
 
-    const leftVariants = {
-        hidden: { x: -80, opacity: 0 },
-        visible: { x: 0, opacity: 1, transition: { duration: 0.45, ease: "easeOut" as const, delay: 0.15 } },
-        exit: { x: -80, opacity: 0, transition: { duration: 0.3 } }
-    };
-
-    const rightVariants = {
-        hidden: { x: 80, opacity: 0 },
-        visible: { x: 0, opacity: 1, transition: { duration: 0.45, ease: "easeOut" as const, delay: 0.15 } },
-        exit: { x: 80, opacity: 0, transition: { duration: 0.3 } }
-    };
-
     const bottomVariants = {
         hidden: { y: 60, opacity: 0 },
         visible: { y: 0, opacity: 1, transition: { duration: 0.45, ease: "easeOut" as const, delay: 0.28 } },
@@ -119,14 +114,23 @@ const WaitingRoom = ({ socket, roomData, setRoomData, setScreen, playerName }: W
                 <div className="wr-room-code">
                     ROOM CODE: <span className="code-value">{roomData?.code}</span>
                 </div>
+                
+                {/* Mobile Settings Toggle */}
+                <button 
+                    className="mobile-settings-toggle" 
+                    onClick={() => setShowMobileSettings(true)}
+                >
+                    <FaCog />
+                </button>
+                
                 <div className="pixel-divider" />
             </motion.div>
 
-            {/* Main content */}
+            {/* Main content - Now a CSS Grid */}
             <div className="wr-body">
 
-                {/* Players panel */}
-                <motion.div className="wr-panel" variants={leftVariants} initial="hidden" animate="visible" exit="exit">
+                {/* Players panel (Left Top) */}
+                <motion.div className="wr-panel panel-players">
                     <div className="panel-title">▸ PLAYERS ({players.length}/{settings.maxPlayers})</div>
                     <div className="players-list">
                         <AnimatePresence>
@@ -141,10 +145,15 @@ const WaitingRoom = ({ socket, roomData, setRoomData, setScreen, playerName }: W
                                     onMouseEnter={() => setHoveredId(player.id)}
                                     onMouseLeave={() => setHoveredId(null)}
                                 >
-                                    <span className="player-crown">{player.isHost ? "♛" : "▸"}</span>
-                                    <span className="player-name-wr">{player.name}</span>
+                                    <span className="player-icon">
+                                        {player.isHost ? <FaCrown className="icon-crown" /> : <FaUser className="icon-user" />}
+                                    </span>
+                                    <span className="player-name-wr">
+                                        {player.name}
+                                        {player.name === playerName && <span className="you-badge"> (YOU)</span>}
+                                    </span>
                                     {player.isHost && <span className="host-badge">HOST</span>}
-                                    {isHost && !player.isHost && hoveredId === player.id && (
+                                    {isHost && !player.isHost  && (
                                         <motion.button
                                             className="kick-btn"
                                             onClick={() => setConfirmKick(player)}
@@ -161,57 +170,59 @@ const WaitingRoom = ({ socket, roomData, setRoomData, setScreen, playerName }: W
                     </div>
                 </motion.div>
 
-                {/* Settings panel */}
-                <motion.div className="wr-panel" variants={rightVariants} initial="hidden" animate="visible" exit="exit">
-                    <div className="panel-title">▸ SETTINGS</div>
+                {/* Settings panel (Left Bottom / Modal on Mobile) */}
+                <motion.div className={`wr-panel panel-settings ${showMobileSettings ? 'mobile-visible' : ''}`}>
+                    
+                    <div className="panel-header">
+                        <div className="panel-title">▸ SETTINGS</div>
+                        {showMobileSettings && (
+                            <button className="mobile-close-settings" onClick={() => setShowMobileSettings(false)}>✕</button>
+                        )}
+                    </div>
+                    
                     <div className="settings-list">
-
                         <div className="setting-row">
                             <span className="setting-label">ROUNDS</span>
                             {isHost ? (
-                                <select
-                                    className="pixel-select"
-                                    value={settings.rounds}
-                                    onChange={e => handleSettingChange('rounds', e.target.value)}
-                                >
+                                <select className="pixel-select" value={settings.rounds} onChange={e => handleSettingChange('rounds', e.target.value)}>
                                     {[2, 3, 4, 5, 6].map(n => <option key={n} value={n}>{n}</option>)}
                                 </select>
-                            ) : (
-                                <span className="setting-value">{settings.rounds}</span>
-                            )}
+                            ) : (<span className="setting-value">{settings.rounds}</span>)}
                         </div>
 
                         <div className="setting-row">
                             <span className="setting-label">DRAW TIME</span>
                             {isHost ? (
-                                <select
-                                    className="pixel-select"
-                                    value={settings.drawTime}
-                                    onChange={e => handleSettingChange('drawTime', e.target.value)}
-                                >
+                                <select className="pixel-select" value={settings.drawTime} onChange={e => handleSettingChange('drawTime', e.target.value)}>
                                     {[30, 60, 80, 120].map(n => <option key={n} value={n}>{n}s</option>)}
                                 </select>
-                            ) : (
-                                <span className="setting-value">{settings.drawTime}s</span>
-                            )}
+                            ) : (<span className="setting-value">{settings.drawTime}s</span>)}
                         </div>
 
                         <div className="setting-row">
                             <span className="setting-label">MAX PLAYERS</span>
                             {isHost ? (
-                                <select
-                                    className="pixel-select"
-                                    value={settings.maxPlayers}
-                                    onChange={e => handleSettingChange('maxPlayers', e.target.value)}
-                                >
+                                <select className="pixel-select" value={settings.maxPlayers} onChange={e => handleSettingChange('maxPlayers', e.target.value)}>
                                     {[2, 4, 6, 8].map(n => <option key={n} value={n}>{n}</option>)}
                                 </select>
-                            ) : (
-                                <span className="setting-value">{settings.maxPlayers}</span>
-                            )}
+                            ) : (<span className="setting-value">{settings.maxPlayers}</span>)}
                         </div>
-
                     </div>
+                </motion.div>
+
+                {/* Chat Panel (Right Column Desktop / Left Column Mobile) */}
+                <motion.div className="wr-panel panel-chat">
+                    <Chat 
+                        socket={socket} 
+                        roomData={roomData!} 
+                        playerName={playerName}
+                        wordHint=""
+                        gamePhase="waiting"
+                        hasGuessed={hasGuessed}
+                        setHasGuessed={setHasGuessed}
+                        chatMessages={chatMessages}
+                        setChatMessages={setChatMessages}
+                    />
                 </motion.div>
             </div>
 

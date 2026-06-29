@@ -491,13 +491,43 @@
 
 .chat-messages {
   flex: 1;
+  min-height: 0; /* This forces the box to scroll instead of stretch! */
+  max-height: calc(63vh - 200px); /* accounts for topbar + input row */
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 12px 14px;
-  scrollbar-width: thin;
-  scrollbar-color: var(--border-dim) transparent;
+  margin-bottom: 10px;
+  padding-right: 6px; /* Gives some breathing room for the custom scrollbar */
+}
+
+/* ── Retro Chat Scrollbar ── */
+.chat-messages {
+  /* This overrides your other CSS file to allow webkit scrollbars to work in modern Chrome */
+  scrollbar-color: #f5c518 #0d0d1a !important; 
+  scrollbar-width: thin !important; 
+}
+
+.chat-messages::-webkit-scrollbar {
+  width: 10px !important; 
+  display: block !important;
+}
+
+.chat-messages::-webkit-scrollbar-track {
+  background: #0d0d1a !important; 
+  border-left: 2px solid #1e1e30 !important;
+}
+
+.chat-messages::-webkit-scrollbar-thumb {
+  background: #f5c518 !important; 
+  border: 2px solid #a88510 !important; 
+  border-radius: 0 !important; 
+  cursor: pointer !important;
+}
+
+.chat-messages::-webkit-scrollbar-thumb:hover {
+  background: #fff !important; 
+  border-color: #f5c518 !important; 
 }
 
 .chat-msg-game {
@@ -549,32 +579,31 @@
   flex-shrink: 0;
 }
 
-.chat-input {
-  flex: 1;
-  background: var(--bg);
-  border: none;
-  color: var(--white);
-  font-family: var(--pixel);
-  font-size: 8px;
-  padding: 10px 10px;
-  outline: none;
+.chat-input { 
+  flex: 1; 
+  font-family: 'Press Start 2P', monospace; 
+  font-size: 9px; /* Increased for better scale */
+  background: #0d0d1a; 
+  color: #fff; 
+  border: 2px solid #1e1e30; 
+  padding: 12px 14px; /* Chunkier padding to fill the space */
+  outline: none; 
+  min-width: 0; 
+}
+.chat-input:focus { border-color: #f5c518; }
+
+.chat-send-btn { 
+  font-family: 'Press Start 2P', monospace; 
+  background: #f5c518; 
+  color: #0d0d1a; 
+  border: none; 
+  padding: 0 16px; /* Wider button to match the taller input */
+  cursor: pointer; 
+  font-size: 10px; /* Scaled up the play icon/text */
 }
 
 .chat-input::placeholder {
   color: #333;
-}
-
-.chat-send-btn {
-  background: var(--accent);
-  color: var(--bg);
-  border: none;
-  font-family: var(--pixel);
-  font-size: 7px;
-  padding: 0 10px;
-  cursor: pointer;
-  letter-spacing: 1px;
-  transition: background 0.12s;
-  flex-shrink: 0;
 }
 
 .chat-send-btn:hover {
@@ -1087,15 +1116,17 @@
   }
 
   /* Chat input larger touch targets on mobile */
-  .chat-input {
-    font-size: 11px;
-    padding: 14px 12px;
+  .chat-input { 
+    font-size: 8px; 
+    padding: 10px 10px; 
+  }
+  .chat-send-btn { 
+    font-size: 8px; 
+    padding: 0 12px; 
   }
 
-  .chat-send-btn {
-    font-size: 11px;
-    padding: 0 16px;
-    min-width: 52px;
+  .chat-messages {
+    max-height: calc(42vh - 120px); /* 120px accounts for panel title + input row + char bar */
   }
 
  .offcanvas-chat {

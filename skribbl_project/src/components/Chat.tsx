@@ -68,7 +68,10 @@ const Chat = ({ socket, roomData, playerName, wordHint, gamePhase, hasGuessed, s
     const sendMessage = () => {
         if (!message) return;
 
-        if(roomData.currentDrawer === socket.id) {
+        if(gamePhase === 'waiting') {
+            // In waiting room, all messages are normal chat
+            socket.emit('chatMessage', { message, roomCode: roomData.code });
+        } else if(roomData.currentDrawer === socket.id) {
             // Drawer cannot guess, only chat
             socket.emit('guessedChat', { message, roomCode: roomData.code });
         } else if (!hasGuessed) {
@@ -116,7 +119,7 @@ const Chat = ({ socket, roomData, playerName, wordHint, gamePhase, hasGuessed, s
                     onChange={(e) => setMessage(e.target.value.slice(0, MAX_LENGTH))}
                     onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
                     placeholder={hasGuessed ? "chat..." : "guess or chat..."}
-                    disabled={gamePhase !== 'drawing' && gamePhase !== 'roundEnd'}
+                    disabled={gamePhase !== 'drawing' && gamePhase !== 'roundEnd' && gamePhase !== 'waiting'}
                     maxLength={MAX_LENGTH}
                 />
                 <button className="chat-send-btn" onClick={sendMessage}>▶</button>

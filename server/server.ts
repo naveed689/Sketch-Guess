@@ -498,7 +498,7 @@ io.on('connection', (socket: Socket) => {
         if(!player) return; // player not found in room, ignore
 
         // broadcast the chat message to everyone in the room
-        socket.to(roomCode).emit('chatMessageRecieve', { message, playerName: player.name, type: 'normal' });
+        io.to(roomCode).emit('chatMessageRecieve', { message, playerName: player.name, type: 'normal' });
     });
 
     socket.on('guessedChat', (data: { roomCode: string; message: string }) => {

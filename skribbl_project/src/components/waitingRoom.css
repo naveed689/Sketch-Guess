@@ -33,7 +33,8 @@
   align-items: center;
   gap: 14px;
   width: 100%;
-  max-width: 780px;
+  max-width: 1200px; 
+  position: relative;
 }
 
 .wr-page .wr-title-tag {
@@ -63,147 +64,205 @@
   );
 }
 
+/* ── Desktop Grid Layout: Responsive Proportions ── */
 .wr-page .wr-body {
-  display: flex;
-  gap: 24px;
+  display: grid;
+  grid-template-areas: "players chat settings";
+  /* 1 part players, 2 parts chat, 1 part settings. Prevents squishing! */
+  grid-template-columns: minmax(180px, 1fr) minmax(300px, 2fr) minmax(180px, 1fr); 
+  grid-template-rows: 1fr;
+  gap: 20px;
   width: 100%;
-  max-width: 780px;
-  align-items: flex-start;
+  max-width: 1200px;
+  align-items: stretch;
+  flex: 1;
+  min-height: 0;
 }
 
 .wr-page .wr-panel {
-  flex: 1;
   background: #10101f;
   border: 3px solid #f5c518;
   box-shadow: 6px 6px 0px #a88510;
-  padding: 24px 20px;
+  padding: 20px 16px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  min-height: 280px;
+  gap: 16px;
+  overflow: hidden;
+  min-width: 0; 
 }
 
+.wr-page .panel-players { grid-area: players; }
+.wr-page .panel-settings { grid-area: settings; }
+.wr-page .panel-chat { grid-area: chat; height: 100%; }
+
+.mobile-settings-toggle { display: none; }
+.mobile-close-settings {
+  display: block !important; /* Ensure it shows up */
+  background: #ff4d4d;
+  border: none;
+  color: white;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px; /* Slightly smaller to match title */
+  padding: 4px 6px;
+  cursor: pointer;
+  position: static !important; /* Removes absolute positioning */
+}
+/* ── Internal Panel Styling ── */
 .wr-page .panel-title {
   font-size: 9px;
   color: #f5c518;
   letter-spacing: 3px;
   border-bottom: 2px solid #2a2a3a;
   padding-bottom: 12px;
-}
-
-.wr-page .players-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  flex-shrink: 0;
 }
 
 .wr-page .player-row {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
+  gap: 8px;
+  padding: 10px;
   background: #0d0d1a;
   border: 2px solid #1e1e30;
   position: relative;
   transition: border-color 0.15s;
 }
 
-.wr-page .player-row:hover {
-  border-color: #f5c518;
-}
-
-.wr-page .player-crown {
-  font-size: 12px;
-  color: #f5c518;
-  min-width: 16px;
-}
-
-.wr-page .player-name-wr {
-  font-size: 9px;
-  color: #fff;
-  flex: 1;
-  letter-spacing: 1px;
-}
-
-.wr-page .host-badge {
+.wr-page .you-badge {
   font-size: 7px;
-  color: #0d0d1a;
-  background: #f5c518;
-  padding: 3px 6px;
-  letter-spacing: 1px;
+  color: #f5c518;
+  font-weight: bold;
+  margin-left: 6px;
+  opacity: 0.8;
 }
+
+.wr-page .player-row:hover { border-color: #f5c518; }
+
+.wr-page .player-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  margin-right: 8px;
+}
+
+.wr-page .icon-crown {
+  color: #f5c518; /* Gold crown */
+  font-size: 10px;
+}
+
+.wr-page .icon-user {
+  color: #555; /* Muted grey user icon */
+  font-size: 8px;
+}
+
+.wr-page .player-icon svg {
+  /* Force the browser to render the icon with sharp, blocky edges */
+  image-rendering: pixelated; 
+  /* Scale it slightly so it doesn't look too thin */
+  transform: scale(1.1); 
+  /* Add a tiny drop shadow to give it that "sprite" depth */
+  filter: drop-shadow(1px 1px 0px rgba(0,0,0,0.5));
+}
+
+.wr-page .player-name-wr { font-size: 8px; color: #fff; flex: 1; letter-spacing: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wr-page .host-badge { font-size: 6px; color: #0d0d1a; background: #f5c518; padding: 3px 5px; letter-spacing: 1px; }
 
 .wr-page .kick-btn {
   font-family: 'Press Start 2P', monospace;
-  font-size: 8px;
+  font-size: 7px;
   background: transparent;
   color: #ff4d4d;
   border: 2px solid #ff4d4d;
-  padding: 4px 7px;
+  padding: 4px 6px;
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
 }
 
-.wr-page .kick-btn:hover {
-  background: #ff4d4d;
-  color: #0d0d1a;
-}
+.wr-page .kick-btn:hover { background: #ff4d4d; color: #0d0d1a; }
 
-.wr-page .settings-list {
+.wr-page .panel-header {
   display: flex;
-  flex-direction: column;
-  gap: 16px;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
 }
 
 .wr-page .setting-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 12px;
+  padding: 10px;
   background: #0d0d1a;
   border: 2px solid #1e1e30;
 }
 
-.wr-page .setting-label {
-  font-size: 8px;
-  color: #888;
-  letter-spacing: 2px;
+.wr-page .setting-label { font-size: 7px; color: #888; letter-spacing: 2px; }
+.wr-page .setting-value { font-size: 8px; color: #f5c518; }
+
+/* ── Scrollable Lists ── */
+.wr-page .players-list,
+.wr-page .settings-list {
+  display: flex;
+  flex-direction: column;
+  flex: 1;           /* Forces the list to fill available space */
+  min-height: 0;     /* Tells flexbox to allow scrolling instead of stretching */
+  overflow-y: auto;
+  padding-right: 6px; /* Adds a bit of breathing room for the scrollbar */
 }
 
-.wr-page .setting-value {
-  font-size: 9px;
-  color: #f5c518;
+.wr-page .players-list { gap: 8px; }
+.wr-page .settings-list { gap: 12px; }
+
+/* ── Custom 8-Bit Scrollbars ── */
+.wr-page .players-list::-webkit-scrollbar,
+.wr-page .settings-list::-webkit-scrollbar,
+.chat-messages::-webkit-scrollbar {
+  width: 8px !important; /* Chunky pixel width */
+}
+
+.wr-page .players-list::-webkit-scrollbar-track,
+.wr-page .settings-list::-webkit-scrollbar-track,
+.chat-messages::-webkit-scrollbar-track {
+  background: #0d0d1a !important; /* Matches the panel background */
+  border-left: 2px solid #1e1e30 !important; /* Gives a pixelated edge effect */
+}
+
+.wr-page .players-list::-webkit-scrollbar-thumb,
+.wr-page .settings-list::-webkit-scrollbar-thumb,
+.chat-messages::-webkit-scrollbar-thumb {
+  background: #f5c518 !important;
+  cursor: pointer !important;
+}
+
+.wr-page .players-list::-webkit-scrollbar-thumb:hover,
+.wr-page .settings-list::-webkit-scrollbar-thumb:hover,
+.chat-messages::-webkit-scrollbar-thumb:hover {
+  background: #fff !important; /* Highlights when hovered */
 }
 
 .wr-page .pixel-select {
   font-family: 'Press Start 2P', monospace;
-  font-size: 9px;
+  font-size: 8px;
   background: #0d0d1a;
   color: #f5c518;
   border: 2px solid #f5c518;
-  padding: 6px 10px;
+  padding: 6px 8px;
   cursor: pointer;
   outline: none;
 }
 
-.wr-page .pixel-select:focus {
-  border-color: #fff;
-}
-
+/* ── Footer ── */
 .wr-page .wr-footer {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 14px;
   width: 100%;
-  max-width: 780px;
+  max-width: 1200px;
 }
 
-.wr-page .error-msg {
-  font-size: 8px;
-  color: #ff4d4d;
-  letter-spacing: 1px;
-}
+.wr-page .error-msg { font-size: 8px; color: #ff4d4d; letter-spacing: 1px; }
 
 .wr-page .pixel-btn {
   font-family: 'Press Start 2P', monospace;
@@ -222,170 +281,74 @@
   box-shadow: 5px 5px 0px #a88510;
 }
 
-.wr-page .btn-start:active {
-  transform: translate(3px, 3px);
-  box-shadow: 2px 2px 0px #a88510;
-}
+.wr-page .btn-start:active { transform: translate(3px, 3px); box-shadow: 2px 2px 0px #a88510; }
 
-.wr-page .waiting-text {
-  font-size: 9px;
-  color: #555;
-  letter-spacing: 2px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
+.wr-page .waiting-text { font-size: 9px; color: #555; letter-spacing: 2px; display: flex; align-items: center; gap: 10px; }
+.wr-page .blink-dot { color: #f5c518; animation: wr-blink 1s step-end infinite; }
+@keyframes wr-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 
-.wr-page .blink-dot {
-  color: #f5c518;
-  animation: wr-blink 1s step-end infinite;
-}
+/* ── Modals (Keep existing style) ── */
+.wr-modal-overlay, .modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.88); display: flex; align-items: center; justify-content: center; z-index: 200; }
+.wr-modal-box { background: #0d0d1a; border: 4px solid #f5c518; padding: 36px 32px; width: 340px; display: flex; flex-direction: column; gap: 22px; box-shadow: 8px 8px 0px #a88510; font-family: 'Press Start 2P', monospace; }
+.wr-modal-box .modal-title { font-size: 12px; color: #f5c518; text-align: center; letter-spacing: 2px; }
+.wr-modal-box .kick-name { font-size: 10px; color: #fff; text-align: center; letter-spacing: 1px; }
+.wr-modal-box .modal-btns { display: flex; gap: 12px; }
+.wr-modal-box .btn-cancel { flex: 1; padding: 12px 8px; font-family: 'Press Start 2P', monospace; font-size: 9px; letter-spacing: 1px; cursor: pointer; background: transparent; color: #666; border: 2px solid #333; }
+.wr-modal-box .btn-kick-confirm { flex: 1; padding: 12px 8px; font-family: 'Press Start 2P', monospace; font-size: 9px; letter-spacing: 1px; cursor: pointer; background: #ff4d4d; color: #fff; border: none; box-shadow: 3px 3px 0px #991f1f; }
+.wr-leave-btn { font-family: 'Press Start 2P', monospace; font-size: 8px; background: transparent; color: #ff4d4d; border: 2px solid #ff4d4d; padding: 10px 20px; cursor: pointer; letter-spacing: 1px; transition: background 0.15s, color 0.15s; }
+.wr-leave-btn:hover { background: #ff4d4d; color: #0d0d1a; }
 
-@keyframes wr-blink {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0; }
-}
+/* ── Mobile Layout ── */
+@media (max-width: 768px) {
+  .wr-page { padding: 12px 12px; gap: 12px; }
+  .wr-header { gap: 8px; flex-shrink: 0; }
+  .wr-title-tag { font-size: 8px; letter-spacing: 2px; }
+  .wr-room-code { font-size: 9px; }
+  .pixel-divider { display: none; }
 
-.wr-modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.88);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 200;
-}
-
-.wr-modal-box {
-  background: #0d0d1a;
-  border: 4px solid #f5c518;
-  padding: 36px 32px;
-  width: 340px;
-  display: flex;
-  flex-direction: column;
-  gap: 22px;
-  box-shadow: 8px 8px 0px #a88510;
-  font-family: 'Press Start 2P', monospace;
-}
-
-.wr-modal-box .modal-title {
-  font-size: 12px;
-  color: #f5c518;
-  text-align: center;
-  letter-spacing: 2px;
-}
-
-.wr-modal-box .kick-name {
-  font-size: 10px;
-  color: #fff;
-  text-align: center;
-  letter-spacing: 1px;
-}
-
-.wr-modal-box .modal-btns {
-  display: flex;
-  gap: 12px;
-}
-
-.wr-modal-box .btn-cancel {
-  flex: 1;
-  padding: 12px 8px;
-  font-family: 'Press Start 2P', monospace;
-  font-size: 9px;
-  letter-spacing: 1px;
-  cursor: pointer;
-  background: transparent;
-  color: #666;
-  border: 2px solid #333;
-  transition: border-color 0.15s, color 0.15s;
-}
-
-.wr-modal-box .btn-cancel:hover {
-  border-color: #666;
-  color: #999;
-}
-
-.wr-modal-box .btn-kick-confirm {
-  flex: 1;
-  padding: 12px 8px;
-  font-family: 'Press Start 2P', monospace;
-  font-size: 9px;
-  letter-spacing: 1px;
-  cursor: pointer;
-  background: #ff4d4d;
-  color: #fff;
-  border: none;
-  box-shadow: 3px 3px 0px #991f1f;
-  transition: transform 0.08s, box-shadow 0.08s;
-}
-
-.wr-modal-box .btn-kick-confirm:active {
-  transform: translate(2px, 2px);
-  box-shadow: 1px 1px 0px #991f1f;
-}
-
-/* ── Leave button ── */
-.wr-leave-btn {
-  font-family: 'Press Start 2P', monospace;
-  font-size: 8px;
-  background: transparent;
-  color: #ff4d4d;
-  border: 2px solid #ff4d4d;
-  padding: 10px 20px;
-  cursor: pointer;
-  letter-spacing: 1px;
-  transition: background 0.15s, color 0.15s;
-}
-
-.wr-leave-btn:hover {
-  background: #ff4d4d;
-  color: #0d0d1a;
-}
-
-/* ── WaitingRoom modal overlay (reused for leave) ── */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.88);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 200;
-}
-
-/* ── Mobile fixes ── */
-@media (max-width: 600px) {
-  .wr-page {
-    padding: 24px 16px;
+  /* New clean icon look */
+  .mobile-settings-toggle {
+    display: flex;
     align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: 50%;
+    right: 0;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: #f5c518;
+    font-size: 16px; /* Icon size */
+    padding: 6px;
+    cursor: pointer;
   }
 
-  .wr-header {
-    align-items: center;
+  /* ── Stacked Mobile Grid: Players Top, Chat Bottom ── */
+  .wr-page .wr-body {
+    grid-template-areas: "players" "chat";
+    grid-template-columns: 1fr;
+    grid-template-rows: min-content 1fr; 
+    gap: 20px;
   }
 
-  .wr-body {
-    flex-direction: column;
-    gap: 16px;
-    width: 100%;
+  .wr-panel { padding: 10px 8px; gap: 10px; box-shadow: 4px 4px 0px #a88510; }
+  .wr-page .panel-players { max-height: 220px; }
+
+  /* Settings Modal */
+  .wr-page .panel-settings { display: none; }
+  .wr-page .panel-settings.mobile-visible {
+    display: flex; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: 90%; max-width: 320px; height: auto; z-index: 300;
+    box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.85);
+  }
+  .mobile-close-settings {
+    display: block; position: absolute; top: 12px; right: 12px;
+    background: #ff4d4d; border: none; color: white;
+    font-family: 'Press Start 2P', monospace; font-size: 10px; padding: 6px 8px; cursor: pointer;
   }
 
-  .wr-panel {
-    width: 100%;
-    min-height: unset;
-  }
+  .wr-page .panel-title { font-size: 7px; padding-bottom: 6px; }
+  .wr-page .pixel-btn { width: 100%; text-align: center; padding: 10px 16px; font-size: 8px; }
+  .wr-leave-btn { width: 100%; text-align: center; padding: 7px 14px; font-size: 7px; }
 
-  .wr-footer {
-    align-items: center;
-  }
-
-  .pixel-btn {
-    width: 100%;
-    text-align: center;
-  }
-
-  .wr-leave-btn {
-    width: 100%;
-    text-align: center;
-  }
 }
