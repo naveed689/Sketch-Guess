@@ -107,6 +107,7 @@
   cursor: pointer;
   position: static !important; /* Removes absolute positioning */
 }
+
 /* ── Internal Panel Styling ── */
 .wr-page .panel-title {
   font-size: 9px;
@@ -332,7 +333,11 @@
   }
 
   .wr-panel { padding: 10px 8px; gap: 10px; box-shadow: 4px 4px 0px #a88510; }
-  .wr-page .panel-players { max-height: 220px; }
+  
+  .wr-page .panel-players { 
+    max-height: 220px;
+    min-height: 220px; /* Allows the list to scroll instead of stretching */
+  }
 
   /* Settings Modal */
   .wr-page .panel-settings { display: none; }
@@ -346,6 +351,8 @@
     background: #ff4d4d; border: none; color: white;
     font-family: 'Press Start 2P', monospace; font-size: 10px; padding: 6px 8px; cursor: pointer;
   }
+
+  
 
   .wr-page .panel-title { font-size: 7px; padding-bottom: 6px; }
   .wr-page .pixel-btn { width: 100%; text-align: center; padding: 10px 16px; font-size: 8px; }

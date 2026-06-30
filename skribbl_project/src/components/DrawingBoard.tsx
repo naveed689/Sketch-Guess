@@ -66,7 +66,7 @@ const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }: DrawingBoard
     };
 
     useEffect(() => {
-        socket.on('drawStart', (data) => {
+        const handleDrawStart = (data: DrawData) => {
             const context = contextRef.current;
             if (!context) return;
             context.strokeStyle = data.color;
@@ -78,9 +78,9 @@ const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }: DrawingBoard
             incomingStrokeRef.current.points.push({ x: data.x, y: data.y });
             context.lineTo(data.x + 0.1, data.y + 0.1);
             context.stroke();
-        });
+        };
 
-        socket.on('draw', (data) => {
+        const handleDraw = (data: DrawData) => {
             const context = contextRef.current;
             if (!context) return;
             if (data.tool === 'eraser') context.lineWidth = 20;
@@ -89,9 +89,9 @@ const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }: DrawingBoard
             if (incomingStrokeRef.current && incomingStrokeRef.current.type === "stroke") {
                 incomingStrokeRef.current?.points.push({ x: data.x, y: data.y } as Points);
             }
-        });
+        };
 
-        socket.on('drawEnd', () => {
+        const handleDrawEnd = () => {
             const context = contextRef.current;
             if (!context) return;
             context.closePath();
@@ -100,14 +100,14 @@ const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }: DrawingBoard
                 incomingStrokeRef.current = null;
             }
             updateHistoryState();
-        });
+        };
 
-        socket.on('fill', (data) => {
+        const handleFill = (data: FillData) => {
             floodFill(data.x, data.y, data.color);
             strokesRef.current.push({ type: "fill", x: data.x, y: data.y, color: data.color });
-        });
+        };
 
-        socket.on('clear', () => {
+        const handleClear = () => {
             const canvas = canvasRef.current;
             const context = contextRef.current;
             if (!canvas || !context) return;
@@ -117,32 +117,32 @@ const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }: DrawingBoard
             currentStrokeRef.current = null;
             isDrawingRef.current = false;
             updateHistoryState();
-        });
+        };
 
-        socket.on('undo', () => {
+        const handleUndo = () => {
             if (strokesRef.current.length === 0) return;
             redoRef.current.push(strokesRef.current.pop()!);
             redraw();
             updateHistoryState();
-        });
+        };
 
-        socket.on('redo', () => {
+        const handleRedo = () => {
             if (redoRef.current.length === 0) return;
             strokesRef.current.push(redoRef.current.pop()!);
             redraw();
             updateHistoryState();
-        });
+        };
 
-        socket.on('nextTurn', ({ currentDrawer }) => {
+        const handleNextTurn = ({ currentDrawer }: { currentDrawer: string }) => {
             resetCanvas();
             setCurrentDrawer(currentDrawer);
             setGamePhase('selecting');
             setHasGuessed(false);
             setRoomData(prev => prev ? ({ ...prev, currentDrawer, wordChoices: [] }) : prev);
             setCorrectGuessers(new Set());
-        });
+        };
 
-        socket.on('roundEnded', ({ currentWord, players } : { currentWord: string; players: Player[] }) => {
+        const handleRoundEnded = ({ currentWord, players }: { currentWord: string; players: Player[] }) => {
             const gained = new Map(
                 players.map(p => {
                     const old = roomDataRef.current.players.find(op => op.id === p.id);
@@ -154,9 +154,9 @@ const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }: DrawingBoard
             setRoomData(prev => prev ? ({ ...prev, players }) : prev);
             setCorrectWord(currentWord);
             setGamePhase('roundEnd');
-        });
+        };
 
-        socket.on('nextRoundStarted', ({ currentDrawer, round }) => {
+        const handleNextRoundStarted = ({ currentDrawer, round }: { currentDrawer: string; round: number }) => {
             resetCanvas();
             setCurrentDrawer(currentDrawer);
             setGamePhase('selecting');
@@ -164,52 +164,52 @@ const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }: DrawingBoard
             setHasGuessed(false);
             setRoomData(prev => prev ? ({ ...prev, currentDrawer, round, wordChoices: [] }) : prev);
             setCorrectGuessers(new Set());
-        });
+        };
 
-        socket.on('gameOver', ({ players }) => {
+        const handleGameOver = ({ players }: { players: Player[] }) => {
             setRoomData(prev => prev ? ({ ...prev, players }) : prev);
             setGamePhase('gameOver');
-        });
+        };
 
-        socket.on('chooseWord', ({ wordChoices }) => {
+        const handleChooseWord = ({ wordChoices }: { wordChoices: string[] }) => {
             setWordChoices(wordChoices);
-        });
+        };
 
-        socket.on('correctGuesser', ({ playerName }) => {
+        const handleCorrectGuesser = ({ playerName }: { playerName: string }) => {
             setCorrectGuessers(prev => new Set([...prev, playerName]));
-        });
+        };
 
-        socket.on('drawingPhaseStarted', ({ wordHint, currentDrawer }) => {
+        const handleDrawingPhaseStarted = ({ wordHint, currentDrawer }: { wordHint: string; currentDrawer: string }) => {
             setWordHint(wordHint);
             setCurrentDrawer(currentDrawer);
             setGamePhase('drawing');
-        });
+        };
 
-        socket.on('yourWord', ({ word }) => {
+        const handleYourWord = ({ word }: { word: string }) => {
             setCurrentWord(word);
             setHasGuessed(true);
-        });
+        };
 
-        socket.on('timerTick', ({ timeLeft }) => {
+        const handleTimerTick = ({ timeLeft }: { timeLeft: number }) => {
             setTimeLeft(timeLeft);
-        });
+        };
 
-        socket.on('playersUpdated', (players) => {
+        const handlePlayersUpdated = (players: Player[]) => {
             setRoomData(prev => prev ? ({ ...prev, players }) : prev);
-        });
+        };
 
-        socket.on('reaction', ({ emoji }) => {
+        const handleReaction = ({ emoji }: { emoji: string }) => {
             const id = Date.now();
             const left = Math.random() * 60 + 20;
             setReactions(prev => [...prev, { id, emoji, left }]);
             setTimeout(() => setReactions(prev => prev.filter(r => r.id !== id)), 2000);
-        });
+        };
 
-        socket.on('kicked', () => {
+        const handleKicked = () => {
             setScreen('lobby');
-        });
+        };
 
-        socket.on('backToLobby', ({ players }) => {
+        const handleBackToLobby = ({ players }: { players: Player[] }) => {
             setRoomData(prev => prev ? ({
                 ...prev,
                 players,
@@ -222,27 +222,67 @@ const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }: DrawingBoard
                 round: 1,
             }) : prev);
             setScreen('waiting');
-        });
+        };
 
-        socket.on('playerLeft', ({ playerName }) => {
+        const handlePlayerLeft = ({ playerName }: { playerName: string }) => {
             addToast(`${playerName} left the game`, "leave");
-        });
+        };
 
-        socket.on('newHost', ({ playerId }) => {
+        const handleNewHost = ({ playerId }: { playerId: string }) => {
             const newHost = roomDataRef.current.players.find(p => p.id === playerId);
             if (playerId === socket.id) {
                 addToast("You are the new host", "host");
             } else {
                 addToast(`${newHost?.name ?? "Someone"} is the new host`, "host");
             }
-        });
+        };
+
+        socket.on('drawStart', handleDrawStart);
+        socket.on('draw', handleDraw);
+        socket.on('drawEnd', handleDrawEnd);
+        socket.on('fill', handleFill);
+        socket.on('clear', handleClear);
+        socket.on('undo', handleUndo);
+        socket.on('redo', handleRedo);
+        socket.on('nextTurn', handleNextTurn);
+        socket.on('roundEnded', handleRoundEnded);
+        socket.on('nextRoundStarted', handleNextRoundStarted);
+        socket.on('gameOver', handleGameOver);
+        socket.on('chooseWord', handleChooseWord);
+        socket.on('correctGuesser', handleCorrectGuesser);
+        socket.on('drawingPhaseStarted', handleDrawingPhaseStarted);
+        socket.on('yourWord', handleYourWord);
+        socket.on('timerTick', handleTimerTick);
+        socket.on('playersUpdated', handlePlayersUpdated);
+        socket.on('reaction', handleReaction);
+        socket.on('kicked', handleKicked);
+        socket.on('backToLobby', handleBackToLobby);
+        socket.on('playerLeft', handlePlayerLeft);
+        socket.on('newHost', handleNewHost);
 
         return () => {
-            ['drawStart','draw','drawEnd','fill','clear','undo','redo','chooseWord','yourWord',
-             'drawingPhaseStarted','timerTick','roundEnded','nextRoundStarted','nextTurn',
-             'gameOver','correctGuesser','playersUpdated','reaction','kicked', 'backToLobby', 
-             'playerLeft','newHost'
-             ].forEach(e => socket.off(e));
+            socket.off('drawStart', handleDrawStart);
+            socket.off('draw', handleDraw);
+            socket.off('drawEnd', handleDrawEnd);
+            socket.off('fill', handleFill);
+            socket.off('clear', handleClear);
+            socket.off('undo', handleUndo);
+            socket.off('redo', handleRedo);
+            socket.off('nextTurn', handleNextTurn);
+            socket.off('roundEnded', handleRoundEnded);
+            socket.off('nextRoundStarted', handleNextRoundStarted);
+            socket.off('gameOver', handleGameOver);
+            socket.off('chooseWord', handleChooseWord);
+            socket.off('correctGuesser', handleCorrectGuesser);
+            socket.off('drawingPhaseStarted', handleDrawingPhaseStarted);
+            socket.off('yourWord', handleYourWord);
+            socket.off('timerTick', handleTimerTick);
+            socket.off('playersUpdated', handlePlayersUpdated);
+            socket.off('reaction', handleReaction);
+            socket.off('kicked', handleKicked);
+            socket.off('backToLobby', handleBackToLobby);
+            socket.off('playerLeft', handlePlayerLeft);
+            socket.off('newHost', handleNewHost);
         };
     }, []);
 
@@ -726,14 +766,14 @@ const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }: DrawingBoard
                     {isDrawer && (
                         <div className="db-controls">
                             <div className="db-tool-group">
-                                <button className={`db-tool-btn ${tool === "pen" ? "active" : ""}`} onClick={() => setTool("pen")} title="Pen"><Pen size={16} /></button>
-                                <button className={`db-tool-btn ${tool === "eraser" ? "active" : ""}`} onClick={() => setTool("eraser")} title="Eraser"><Eraser size={16} /></button>
-                                <button className={`db-tool-btn ${tool === "fill" ? "active" : ""}`} onClick={() => setTool("fill")} title="Fill"><PaintBucket size={16} /></button>
+                                <button className={`db-tool-btn ${tool === "pen" ? "active" : ""}`} onClick={() => setTool("pen")} title="Pen"><Pen size={20} /></button>
+                                <button className={`db-tool-btn ${tool === "eraser" ? "active" : ""}`} onClick={() => setTool("eraser")} title="Eraser"><Eraser size={20} /></button>
+                                <button className={`db-tool-btn ${tool === "fill" ? "active" : ""}`} onClick={() => setTool("fill")} title="Fill"><PaintBucket size={20} /></button>
                             </div>
                             <div className="db-tool-group">
-                                <button className="db-tool-btn" onClick={undo} disabled={!canUndo} title="Undo"><Undo2 size={16} /></button>
-                                <button className="db-tool-btn" onClick={redo} disabled={!canRedo} title="Redo"><Redo2 size={16} /></button>
-                                <button className="db-tool-btn" onClick={clearCanvas} title="Clear"><Trash2 size={16} /></button>
+                                <button className="db-tool-btn" onClick={undo} disabled={!canUndo} title="Undo"><Undo2 size={20} /></button>
+                                <button className="db-tool-btn" onClick={redo} disabled={!canRedo} title="Redo"><Redo2 size={20} /></button>
+                                <button className="db-tool-btn" onClick={clearCanvas} title="Clear"><Trash2 size={20} /></button>
                             </div>
                             <div className="db-tool-group">
                                 <div className="db-color-picker-wrap" ref={colorPickerRef}>

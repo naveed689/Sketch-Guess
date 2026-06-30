@@ -12,38 +12,51 @@ const Lobby = ({ socket, setScreen, setRoomData, setPlayerName }: LobbyProps) =>
     const pendingScreenSwitch = useRef<boolean>(false);
 
     useEffect(() => {
-        socket.on('roomCreated', () => {
+        const handleRoomCreated = () => {
             pendingScreenSwitch.current = true;
-        });
-        socket.on('roomJoined', () => {
+        };
+
+        const handleRoomJoined = () => {
             pendingScreenSwitch.current = true;
-        });
-        socket.on('roomUpdated', (room) => {
+        };
+
+        const handleRoomUpdated = (room: Room) => {
             setRoomData(room);
             if (pendingScreenSwitch.current) {
                 pendingScreenSwitch.current = false;
                 setScreen(room.status === "waiting" ? "waiting" : "game");
             }
-        });
-        socket.on('roomNotFound', () => {
+        };
+
+        const handleRoomNotFound = () => {
             setRoomError("Room not found. Check the code and try again.");
-        });
-        socket.on('roomFull', () => {
+        };
+
+        const handleRoomFull = () => {
             setRoomError("Room is full. Try another room.");
-        });
-        socket.on('nameTaken', () => {
+        };
+
+        const handleNameTaken = () => {
             setRoomError("Name already taken in that room.");
-        });
+        };
+
+        socket.on('roomCreated', handleRoomCreated);
+        socket.on('roomJoined', handleRoomJoined);
+        socket.on('roomUpdated', handleRoomUpdated);
+        socket.on('roomNotFound', handleRoomNotFound);
+        socket.on('roomFull', handleRoomFull);
+        socket.on('nameTaken', handleNameTaken);
+
         return () => {
-            socket.off('roomCreated');
-            socket.off('roomJoined');
-            socket.off('roomNotFound');
-            socket.off('roomFull');
-            socket.off('roomUpdated');
-            socket.off('nameTaken');
+            socket.off('roomCreated', handleRoomCreated);
+            socket.off('roomJoined', handleRoomJoined);
+            socket.off('roomUpdated', handleRoomUpdated);
+            socket.off('roomNotFound', handleRoomNotFound);
+            socket.off('roomFull', handleRoomFull);
+            socket.off('nameTaken', handleNameTaken);
         };
     }, []);
-
+    
     const handleCreateRoom = () => {
         if (!name.trim()) {
             setNameError("Name required to create a room.");

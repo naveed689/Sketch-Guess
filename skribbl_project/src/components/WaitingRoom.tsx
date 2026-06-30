@@ -36,32 +36,43 @@ const WaitingRoom = ({ socket, roomData, setRoomData, setScreen, playerName }: W
     };
 
     useEffect(() => {
-        socket.on('gameStarted', (data: Room) => {
+        const handleGameStarted = (data: Room) => {
             setRoomData(prev => ({ ...prev, ...data, gamePhase: 'selecting' }));
             setScreen('game');
-        });
-        socket.on('roomUpdated', (room: Room) => {
+        };
+
+        const handleRoomUpdated = (room: Room) => {
             setRoomData(room);
-        });
-        socket.on('kicked', () => {
+        };
+
+        const handleKicked = () => {
             setScreen('lobby');
             setRoomData(null);
-        });
-        socket.on('playersUpdated', (updatedPlayers: Player[]) => {
+        };
+
+        const handlePlayersUpdated = (updatedPlayers: Player[]) => {
             setPlayers(updatedPlayers);
             const currentPlayer = updatedPlayers.find(p => p.name === playerName);
             setIsHost(currentPlayer?.isHost || false);
-        });
-        socket.on('notEnoughPlayers', () => {
+        };
+
+        const handleNotEnoughPlayers = () => {
             setNotEnoughError(true);
             setTimeout(() => setNotEnoughError(false), 2500);
-        });
+        };
+
+        socket.on('gameStarted', handleGameStarted);
+        socket.on('roomUpdated', handleRoomUpdated);
+        socket.on('kicked', handleKicked);
+        socket.on('playersUpdated', handlePlayersUpdated);
+        socket.on('notEnoughPlayers', handleNotEnoughPlayers);
+
         return () => {
-            socket.off('gameStarted');
-            socket.off('roomUpdated');
-            socket.off('kicked');
-            socket.off('notEnoughPlayers');
-            socket.off('playersUpdated');
+            socket.off('gameStarted', handleGameStarted);
+            socket.off('roomUpdated', handleRoomUpdated);
+            socket.off('kicked', handleKicked);
+            socket.off('playersUpdated', handlePlayersUpdated);
+            socket.off('notEnoughPlayers', handleNotEnoughPlayers);
         };
     }, []);
 
