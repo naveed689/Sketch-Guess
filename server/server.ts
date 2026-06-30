@@ -406,6 +406,14 @@ io.on('connection', (socket: Socket) => {
         console.log(`${data.name} joined room ${roomCode}`);
     });
 
+    // Server-side
+    socket.on('requestRoomUpdate', (data: { roomCode: string }) => {
+        const room = rooms.get(data.roomCode);
+        if (room) {
+            socket.emit('roomUpdated', room);
+        }
+    });
+
     // update settings event
     socket.on('updateSettings', (data: { roomCode: string; settings: Partial<RoomSettings> }) => {
         const room = rooms.get(data.roomCode);
@@ -469,6 +477,7 @@ io.on('connection', (socket: Socket) => {
         // Tell everyone drawing has started
         // Drawer gets the word, others get the length as underscores
         const wordHint = '_ '.repeat(word.length).trim();
+        room.wordHint = wordHint;
 
         io.to(roomCode).emit('drawingPhaseStarted', {
             wordHint,

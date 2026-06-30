@@ -5,7 +5,7 @@ import { Pen, Eraser, PaintBucket, Undo2, Redo2, Trash2 } from "lucide-react";
 import useToast from "../hooks/useToast";
 import Toast from "./Toast";
 
-import type { DrawData, DrawingBoardProps, FillData, Player, CanvasAction, Reaction, Points, StrokeAction, FillAction, ChatMessage } from "../types";
+import type { DrawData, DrawingBoardProps, FillData, Player, CanvasAction, Reaction, Points, StrokeAction, FillAction, ChatMessage, Room } from "../types";
 import Chat from "./Chat";
 import Leaderboard from "./Leaderboard";
 import "./drawingBoard.css";
@@ -237,6 +237,34 @@ const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }: DrawingBoard
             }
         };
 
+        const handleRoomUpdated = (updatedRoom: Room) => {
+            setRoomData(updatedRoom);
+            setGamePhase(updatedRoom.gamePhase);
+            setCurrentDrawer(updatedRoom.currentDrawer);
+            setWordHint(updatedRoom.wordHint);
+            setRound(updatedRoom.round);
+            setCorrectGuessers(updatedRoom.correctGuessers ? new Set(updatedRoom.correctGuessers.map(cg => updatedRoom.players.find(p => p.id === cg.id)?.name).filter(Boolean) as string[]) : new Set());
+            
+            // if there is any stroke data in the updated room, sync it to the local strokesRef and redraw the canvas
+            if(updatedRoom.strokes && updatedRoom.strokes.length > 0) { 
+                strokesRef.current = [...updatedRoom.strokes];
+                requestAnimationFrame(() => { 
+                    setTimeout(() => {
+                        redraw();
+                    }, 50); // 50ms buffer guarantees the DOM is ready
+                });
+            }
+
+            setTimeLeft(updatedRoom.timeLeft);
+            if(updatedRoom.wordHint) {
+                setWordHint(updatedRoom.wordHint);
+            }
+            
+            if(updatedRoom.wordChoices && updatedRoom.wordChoices.length > 0) {
+                setWordChoices(updatedRoom.wordChoices);
+            }
+        };
+
         socket.on('drawStart', handleDrawStart);
         socket.on('draw', handleDraw);
         socket.on('drawEnd', handleDrawEnd);
@@ -259,6 +287,7 @@ const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }: DrawingBoard
         socket.on('backToLobby', handleBackToLobby);
         socket.on('playerLeft', handlePlayerLeft);
         socket.on('newHost', handleNewHost);
+        socket.on('roomUpdated', handleRoomUpdated);
 
         return () => {
             socket.off('drawStart', handleDrawStart);
@@ -410,8 +439,14 @@ const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }: DrawingBoard
         }
     }, []);
 
-    useEffect(() => { roomDataRef.current = roomData; }, [roomData]);
-    useEffect(() => { setCanUndo(strokesRef.current.length > 0); setCanRedo(redoRef.current.length > 0); }, []);
+    useEffect(() => { 
+        roomDataRef.current = roomData; 
+    }, [roomData]);
+
+    useEffect(() => { 
+        setCanUndo(strokesRef.current.length > 0); 
+        setCanRedo(redoRef.current.length > 0); 
+    }, []);
 
     useEffect(() => {
         const handleOutside = (e: MouseEvent | TouchEvent) => {
@@ -445,6 +480,19 @@ const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }: DrawingBoard
         }
         toolRef.current = tool;
     }, [tool]);
+
+    // state sync when browser comes back from background
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible') {
+            // Re-sync with server
+            socket.emit('requestRoomUpdate', { roomCode: roomData.code } as { roomCode: string });
+            }
+        };
+
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+        return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+    }, [roomData.code]);
 
     const updateHistoryState = () => {
         setCanUndo(strokesRef.current.length > 0);
