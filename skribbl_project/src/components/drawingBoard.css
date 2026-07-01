@@ -88,21 +88,29 @@
   border-top: 1px solid var(--border-dim);
 }
 
+/* Base styles for the buttons */
 .overlay-toggle-btn {
   background: transparent;
   border: 2px solid var(--border);
   color: var(--accent);
-  font-family: var(--pixel);
-  font-size: 9px;
-  padding: 6px 8px;
   cursor: pointer;
-  letter-spacing: 1px;
-  transition: background 0.15s;
-  display: none; /* shown via media query */
+  transition: background 0.15s, transform 0.1s;
+  display: none; /* remains hidden on desktop */
+  
+  /* Make them perfect squares */
+  align-items: center;
+  justify-content: center;
+  width: 32px; 
+  height: 32px;
+  padding: 0;
 }
 
 .overlay-toggle-btn:hover {
   background: rgba(245,197,24,0.1);
+}
+
+.overlay-toggle-btn:active {
+  transform: scale(0.9);
 }
 
 /* ── Room code box ── */
@@ -1008,9 +1016,15 @@
   }
 
   /* Shrink the toggle buttons */
+  .overlay-toggle-btn.lb-btn, 
+  .overlay-toggle-btn.chat-btn { 
+      display: flex; 
+  }
+  
+  /* Optionally shrink them slightly for smaller phones */
   .overlay-toggle-btn {
-    font-size: 7px;
-    padding: 5px 6px;
+      width: 28px;
+      height: 28px;
   }
 
   /* Shrink room code box */

@@ -32,7 +32,7 @@ function startTimer(roomCode: string): void {
             timers.delete(roomCode);
             endRound(roomCode);
         }
-    }, 10000);
+    }, 1000); // 1 second interval
     timers.set(roomCode, interval);
 }
 
