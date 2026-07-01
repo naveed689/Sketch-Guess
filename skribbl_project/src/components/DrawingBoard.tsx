@@ -1,7 +1,7 @@
 import React from "react";
 import { useRef, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Pen, Eraser, PaintBucket, Undo2, Redo2, Trash2 } from "lucide-react";
+import { Pen, Eraser, PaintBucket, Undo2, Redo2, Trash2, Trophy, MessageSquare } from "lucide-react";
 import useToast from "../hooks/useToast";
 import Toast from "./Toast";
 
@@ -752,8 +752,24 @@ const DrawingBoard = ({ socket, roomData, setRoomData, setScreen }: DrawingBoard
                 {/* ── ROW 1 ── */}
                 <div className="topbar-row1">
                     <div className="topbar-left">
-                        <button className="overlay-toggle-btn lb-btn" onClick={() => setShowLbOffcanvas(true)}>☰ LB</button>
-                        {isDrawer && <button className="overlay-toggle-btn chat-btn" onClick={() => setShowChatOffcanvas(true)}>☰ CHAT</button>}
+                        <button 
+                            className="overlay-toggle-btn lb-btn" 
+                            onClick={() => setShowLbOffcanvas(true)}
+                            title="Leaderboard"
+                        >
+                            <Trophy size={14} strokeWidth={2.5} />
+                        </button>
+                        
+                        {isDrawer && (
+                            <button 
+                                className="overlay-toggle-btn chat-btn" 
+                                onClick={() => setShowChatOffcanvas(true)}
+                                title="Chat"
+                            >
+                                <MessageSquare size={14} strokeWidth={2.5} />
+                            </button>
+                        )}
+                        
                         <div className="room-code-box">
                             <span className="room-code-label">{roomData.code}</span>
                             <button

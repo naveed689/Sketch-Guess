@@ -22,12 +22,12 @@
    GAME PAGE SHELL
 ───────────────────────────────────────── */
 .game-page {
-  min-height: 100vh;
+  height: 100dvh; /* Swapped min-height for hard height, and vh for dvh */
   background: var(--bg);
   font-family: var(--pixel);
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: hidden; /* Absolutely no page scrolling allowed */
   position: relative;
 }
 
@@ -1100,25 +1100,35 @@
 
   /* Non-drawer phone: canvas top / chat bottom */
   .game-body.non-drawer-phone {
+    display: flex;
     flex-direction: column;
+    height: 100%;
+    overflow: hidden;
   }
 
+  /* Force exactly 55% of the remaining height */
   .game-body.non-drawer-phone .canvas-area {
-    flex: 0 0 35%;
+    flex: none;
+    height: 55%; 
     padding: 8px;
   }
 
+  /* Force exactly 45% of the remaining height */
   .game-body.non-drawer-phone .chat-panel {
-    display: flex;
-    flex: 0 0 65%;
+    flex: none;
+    height: 45%; 
     width: 100%;
+    display: flex;
+    flex-direction: column;
     border-left: none;
     border-top: 3px solid var(--border-dim);
   }
 
-  /* Fix chat messages overflow on mobile */
+  /* The chat messages are forced to scroll within their exact box */
   .game-body.non-drawer-phone .chat-messages {
-    max-height: calc(65vh * 0.65 - 80px); /* subtract input row height */
+    flex: 1;
+    min-height: 0 !important;
+    max-height: none !important;
     overflow-y: auto;
   }
 
